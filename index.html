@@ -319,7 +319,7 @@
                     <h2 class="text-xl font-display font-light tracking-wide">
                         <span class="text-white">光影</span><span class="text-accent">.</span>
                     </h2>
-                    <p class="text-gray-400 text-sm mt-2">© 2025 摄影作品集. 保留所有权利.</p>
+                    <p class="text-gray-400 text-sm mt-2">© 2025 摄影作品集. By JasonS 申家铖.</p>
                 </div>
                 <div class="text-gray-400 text-sm">
                     用镜头讲述生活的故事
@@ -476,49 +476,70 @@
             });
         }
         
-        /**
-         * 【新增】获取视频第一帧作为封面（核心功能）
-         * @param {string} videoUrl - 视频地址
-         * @returns {Promise<string>} 第一帧图片的dataURL
-         */
-        function getVideoFirstFrame(videoUrl) {
-            return new Promise((resolve, reject) => {
-                // 1. 创建隐藏的临时视频元素（仅用于加载帧，不显示）
-                const tempVideo = document.createElement('video');
-                tempVideo.src = videoUrl;
-                tempVideo.preload = 'metadata'; // 仅加载元数据（含第一帧），优化性能
-                tempVideo.classList.add('temp-video');
-                document.body.appendChild(tempVideo);
-                
-                // 2. 视频元数据加载完成（可获取宽高、第一帧）
-                tempVideo.addEventListener('loadeddata', () => {
-                    // 3. 创建canvas用于绘制第一帧
-                    const canvas = document.createElement('canvas');
-                    // 设置canvas宽高与视频一致（保持比例）
-                    canvas.width = tempVideo.videoWidth;
-                    canvas.height = tempVideo.videoHeight;
-                    
-                    // 4. 在canvas上绘制视频第一帧（currentTime默认0，即第一帧）
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(tempVideo, 0, 0, canvas.width, canvas.height);
-                    
-                    // 5. 将canvas转为图片dataURL（base64格式，可直接作为poster）
-                    const frameUrl = canvas.toDataURL('image/jpeg');
-                    
-                    // 6. 清理临时元素，避免内存占用
-                    document.body.removeChild(tempVideo);
-                    resolve(frameUrl);
-                });
-                
-                // 7. 视频加载失败时，返回备用图片
-                tempVideo.addEventListener('error', () => {
-                    document.body.removeChild(tempVideo);
-                    // 备用图片（避免封面空白）
-                    resolve('https://picsum.photos/800/600?video-placeholder');
-                });
-            });
-        }
+     /**
+ * 【修改】获取视频中间帧作为封面（解决第一帧黑屏问题）
+ * @param {string} videoUrl - 视频地址
+ * @returns {Promise<string>} 中间帧图片的dataURL
+ */
+function getVideoFirstFrame(videoUrl) {
+    return new Promise((resolve, reject) => {
+        // 1. 创建隐藏的临时视频元素（仅用于加载帧，不显示）
+        const tempVideo = document.createElement('video');
+        tempVideo.src = videoUrl;
+        tempVideo.preload = 'metadata'; // 加载元数据（含时长信息）
+        tempVideo.classList.add('temp-video');
+        document.body.appendChild(tempVideo);
+
+        // 超时处理（5秒未加载完成则用备用图）
+        const timeout = setTimeout(() => {
+            document.body.removeChild(tempVideo);
+            resolve('https://picsum.photos/800/600?video-placeholder');
+        }, 5000);
         
+        // 2. 视频元数据加载完成（可获取总时长）
+        tempVideo.addEventListener('loadedmetadata', () => {
+            // 计算中间帧时间（总时长的50%位置）
+            const middleTime = tempVideo.duration / 2;
+            
+            // 处理异常时长（如视频损坏导致时长为0）
+            if (isNaN(middleTime) || middleTime <= 0) {
+                clearTimeout(timeout);
+                document.body.removeChild(tempVideo);
+                resolve('https://picsum.photos/800/600?video-placeholder');
+                return;
+            }
+
+            // 3. 将视频定位到中间帧位置
+            tempVideo.currentTime = middleTime;
+
+            // 4. 视频定位完成后（seeked事件）绘制中间帧
+            tempVideo.addEventListener('seeked', () => {
+                clearTimeout(timeout);
+                
+                // 创建canvas绘制中间帧
+                const canvas = document.createElement('canvas');
+                canvas.width = tempVideo.videoWidth;
+                canvas.height = tempVideo.videoHeight;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(tempVideo, 0, 0, canvas.width, canvas.height);
+                
+                // 转为图片dataURL
+                const frameUrl = canvas.toDataURL('image/jpeg');
+                
+                // 清理临时元素
+                document.body.removeChild(tempVideo);
+                resolve(frameUrl);
+            }, { once: true }); // 确保事件只触发一次
+        });
+        
+        // 5. 视频加载失败时，返回备用图片
+        tempVideo.addEventListener('error', () => {
+            clearTimeout(timeout);
+            document.body.removeChild(tempVideo);
+            resolve('https://picsum.photos/800/600?video-placeholder');
+        });
+    });
+}
         /**
          * 加载媒体文件并显示
          * @param {string} type 类型 (photos 或 videos)
