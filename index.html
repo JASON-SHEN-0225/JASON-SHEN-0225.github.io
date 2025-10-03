@@ -142,25 +142,18 @@
     </style>
 </head>
 <body class="bg-light text-primary antialiased">
-    <!-- 导航栏 -->
+    <!-- 导航栏（修复宽度异常） -->
     <header class="fixed top-0 left-0 right-0 bg-light/90 backdrop-blur-sm z-50 transition-all duration-300">
-        <div class="container mx-auto px-6 py-6 flex justify-between items-center">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-6 flex justify-between items-center">
             <!-- 调大左上角"光影"字样 -->
             <h1 class="text-2xl md:text-3xl font-display font-light tracking-wide">
                 <span class="text-primary">光影</span><span class="text-accent">.</span>
             </h1>
             
-            <!-- 入站人数统计 -->
-            <div class="hidden md:flex items-center text-sm text-secondary mr-6">
-                <i class="fa fa-user-o mr-1"></i>
-                <span>访问量：</span>
-                <span id="visitor-count" class="font-medium text-primary ml-1">0</span>
-            </div>
-            
             <!-- 桌面端导航 -->
             <div class="flex items-center">
                 <nav class="hidden md:flex items-center">
-                    <ul class="flex space-x-8">
+                    <ul class="flex flex-wrap gap-x-6 gap-y-2">
                         <li><a href="#photos" class="text-sm uppercase tracking-wider hover:text-accent transition-colors">照片</a></li>
                         <li><a href="#videos" class="text-sm uppercase tracking-wider hover:text-accent transition-colors">视频</a></li>
                         <li><a href="#about" class="text-sm uppercase tracking-wider hover:text-accent transition-colors">关于</a></li>
@@ -181,13 +174,6 @@
         <!-- 移动端菜单 -->
         <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-gray-100">
             <div class="container mx-auto px-6 py-4">
-                <!-- 移动端访问量统计 -->
-                <div class="text-sm text-secondary mb-4 pb-2 border-b border-gray-100">
-                    <i class="fa fa-user-o mr-1"></i>
-                    <span>访问量：</span>
-                    <span id="mobile-visitor-count" class="font-medium text-primary">0</span>
-                </div>
-                
                 <ul class="space-y-4">
                     <li><a href="#photos" class="block py-2 text-sm uppercase tracking-wider hover:text-accent transition-colors">照片</a></li>
                     <li><a href="#videos" class="block py-2 text-sm uppercase tracking-wider hover:text-accent transition-colors">视频</a></li>
@@ -260,7 +246,7 @@
     </section>
 
 
-    <!-- 视频展示区 -->
+    <!-- 视频展示区（修复加载转圈问题） -->
     <section id="videos" class="py-24 bg-light section-fade-in">
         <div class="container mx-auto px-6">
             <div class="text-center mb-16">
@@ -399,8 +385,6 @@
         const menuToggle = document.getElementById('menu-toggle');
         const mobileMenu = document.getElementById('mobile-menu');
         const sections = document.querySelectorAll('.section-fade-in');
-        const visitorCountEl = document.getElementById('visitor-count');
-        const mobileVisitorCountEl = document.getElementById('mobile-visitor-count');
         
         // 存储加载的媒体数据
         let allMedia = {
@@ -412,9 +396,6 @@
         
         // 初始化页面
         document.addEventListener('DOMContentLoaded', () => {
-            // 加载访问量统计
-            loadVisitorCount();
-            
             // 加载媒体
             loadMedia('photos');
             loadMedia('videos');
@@ -489,48 +470,6 @@
         });
         
         /**
-         * 加载访问量统计（使用CountAPI）
-         */
-        function loadVisitorCount() {
-            // 可以替换为自己的CountAPI key（访问https://countapi.xyz/生成）
-            const countApiKey = 'jason-photo-gallery';
-            
-            // 获取当前计数
-            fetch(`https://api.countapi.xyz/get/${countApiKey}/visits`)
-                .then(response => response.json())
-                .then(data => {
-                    const count = data.value || 0;
-                    updateVisitorCount(count);
-                    
-                    // 递增计数（每24小时内同一IP只增1次）
-                    const lastVisit = localStorage.getItem('lastVisit');
-                    const now = new Date().toDateString();
-                    
-                    if (!lastVisit || lastVisit !== now) {
-                        fetch(`https://api.countapi.xyz/hit/${countApiKey}/visits`)
-                            .then(res => res.json())
-                            .then(updated => {
-                                updateVisitorCount(updated.value);
-                            });
-                        localStorage.setItem('lastVisit', now);
-                    }
-                })
-                .catch(error => {
-                    console.log('访问量统计加载失败:', error);
-                    // 失败时显示默认值
-                    updateVisitorCount('--');
-                });
-        }
-        
-        /**
-         * 更新访问量显示
-         */
-        function updateVisitorCount(count) {
-            visitorCountEl.textContent = count;
-            mobileVisitorCountEl.textContent = count;
-        }
-        
-        /**
          * 设置滚动动画监听
          */
         function setupScrollAnimation() {
@@ -562,18 +501,20 @@
         }
         
         /**
-         * 获取视频中间帧作为封面
+         * 获取视频中间帧作为封面（修复加载超时问题）
          */
         function getVideoFirstFrame(videoUrl, ext) {
             return new Promise((resolve) => {
                 const tempVideo = document.createElement('video');
                 tempVideo.src = videoUrl;
-                tempVideo.preload = 'auto';
+                tempVideo.preload = 'metadata'; // 只加载元数据，加快速度
                 tempVideo.crossOrigin = 'anonymous';
                 tempVideo.classList.add('temp-video');
                 document.body.appendChild(tempVideo);
 
+                // 8秒超时处理（防止一直转圈）
                 const timeout = setTimeout(() => {
+                    console.log(`视频封面加载超时: ${videoUrl}`);
                     cleanupAndResolve(tempVideo, `https://picsum.photos/800/600?video-placeholder-${Date.now()}`);
                 }, 8000);
                 
@@ -606,12 +547,14 @@
                         const frameUrl = canvas.toDataURL('image/jpeg', 0.8);
                         cleanupAndResolve(tempVideo, frameUrl);
                     } catch (e) {
+                        console.error('视频封面绘制失败:', e);
                         cleanupAndResolve(tempVideo, `https://picsum.photos/800/600?video-placeholder-${Date.now()}`);
                     }
                 }, { once: true });
                 
                 tempVideo.addEventListener('error', () => {
                     clearTimeout(timeout);
+                    console.error('视频加载错误:', videoUrl);
                     cleanupAndResolve(tempVideo, `https://picsum.photos/800/600?video-placeholder-${Date.now()}`);
                 });
             });
@@ -642,7 +585,7 @@
         }
         
         /**
-         * 加载媒体文件并显示
+         * 加载媒体文件并显示（修复视频加载转圈）
          */
         async function loadMedia(type) {
             try {
@@ -720,12 +663,19 @@
                         const loadingEl = mediaItem.querySelector(`#loading-${index}`);
                         const videoEl = mediaItem.querySelector('video');
                         
+                        // 视频加载超时处理（8秒）
+                        const videoLoadTimeout = setTimeout(() => {
+                            loadingEl.style.opacity = 0;
+                            setTimeout(() => loadingEl.style.display = 'none', 300);
+                        }, 8000);
+                        
                         try {
                             const posterUrl = await getVideoFirstFrame(fileUrl, ext);
                             videoEl.poster = posterUrl;
                         } catch (e) {
                             videoEl.poster = `https://picsum.photos/800/600?video-placeholder-${Date.now()}`;
                         } finally {
+                            clearTimeout(videoLoadTimeout);
                             loadingEl.style.opacity = 0;
                             setTimeout(() => loadingEl.style.display = 'none', 300);
                         }
