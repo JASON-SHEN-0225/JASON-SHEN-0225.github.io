@@ -364,9 +364,6 @@
         const REPO_NAME = 'JASON-SHEN-0225.github.io';
         const BRANCH = 'main'; // 通常是main或master
         
-        // Unsplash API 配置 - 请替换为你的Access Key！
-        const UNSPLASH_ACCESS_KEY = "epGkRwf1j2608glPJELIR1FAEg1XlFsGU3S5bW2WC5s"; // 从https://unsplash.com/developers获取
-        
         // 支持的媒体格式
         const IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
         const VIDEO_EXTENSIONS = ['mp4', 'webm', 'mov'];
@@ -519,49 +516,13 @@
         }
         
         /**
-         * 2. 优化版视频封面获取（基于Unsplash API，无video标签，带降级）
+         * 2. 优化版视频封面获取（解决黑屏/超时/资源泄漏）
          */
         function getVideoFirstFrame(videoUrl, ext) {
-            return new Promise(async (resolve) => {
-                // 初始化备用封面：先用picsum做终极兜底
-                let fallbackPoster = `https://picsum.photos/1920/1080?fallback-${Date.now()}`;
-
-                // 尝试调用Unsplash API获取随机横屏图（无video标签）
-                if (UNSPLASH_ACCESS_KEY) {
-                    try {
-                        const unsplashParams = new URLSearchParams({
-                            orientation: "landscape", // 仅限制横屏（适配视频封面）
-                            w: 1920,
-                            h: 1080,
-                            per_page: 1
-                        });
-                        const unsplashResponse = await fetch(
-                            `https://api.unsplash.com/photos/random?${unsplashParams}`,
-                            {
-                                method: "GET",
-                                headers: {
-                                    "Authorization": `Client-ID ${UNSPLASH_ACCESS_KEY}`,
-                                    "Accept-Version": "v1"
-                                },
-                                timeout: 5000 // API请求5秒超时
-                            }
-                        );
-
-                        if (unsplashResponse.ok) {
-                            const unsplashData = await unsplashResponse.json();
-                            // 优先用自定义尺寸图，没有则用常规尺寸
-                            fallbackPoster = unsplashData.urls.custom || unsplashData.urls.regular;
-                            console.log("成功通过Unsplash API获取备用封面");
-                        } else {
-                            throw new Error(`Unsplash API响应码: ${unsplashResponse.status}`);
-                        }
-                    } catch (err) {
-                        console.warn("Unsplash API调用失败，切换到picsum兜底:", err.message);
-                    }
-                } else {
-                    console.warn("未配置Unsplash Access Key，直接使用picsum兜底");
-                }
-
+            return new Promise((resolve) => {
+                // 保底备用封面（确保不会空白）
+                const fallbackPoster = `https://picsum.photos/800/600?video-placeholder-${Date.now()}`;
+                
                 // 第一步：先预检查视频可用性
                 preCheckVideoAccess(videoUrl).then(isAccessible => {
                     if (!isAccessible) {
@@ -634,8 +595,8 @@
                                 const ctx = canvas.getContext('2d');
                                 ctx.drawImage(tempVideo, 0, 0, canvas.width, canvas.height);
                                 
-                                // 生成封面图（质量0.9，平衡清晰度和体积）
-                                const frameUrl = canvas.toDataURL('image/jpeg', 1.p);
+                                // 生成封面图（压缩质量0.7，平衡清晰度和体积）
+                                const frameUrl = canvas.toDataURL('image/jpeg', 1);
                                 cleanupTempVideo(tempVideo);
                                 resolve(frameUrl);
                             } catch (e) {
