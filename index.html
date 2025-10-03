@@ -144,7 +144,7 @@
 <body class="bg-light text-primary antialiased">
     <!-- 导航栏 -->
     <header class="fixed top-0 left-0 right-0 bg-light/90 backdrop-blur-sm z-50 transition-all duration-300">
-        <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-6 flex justify-between items-center">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-6 w-64 flex justify-between items-center">
             <h1 class="text-3xl md:text-4xl font-display font-light tracking-wide">
                 <span class="text-primary">光影</span><span class="text-accent">.</span>
             </h1>
@@ -551,7 +551,7 @@
                         clearTimeout(totalTimeout);
                         cleanupTempVideo(tempVideo);
                         resolve(fallbackPoster);
-                    }, 6000);
+                    }, 5000);
 
                     // 元数据加载成功
                     tempVideo.addEventListener('loadedmetadata', () => {
@@ -565,13 +565,13 @@
                             return resolve(fallbackPoster);
                         }
 
-                        // 帧跳转超时（3秒）
+                        // 帧跳转超时（6秒）
                         const seekTimeout = setTimeout(() => {
                             console.warn(`视频帧跳转超时: ${videoUrl}`);
                             clearTimeout(totalTimeout);
                             cleanupTempVideo(tempVideo);
                             resolve(fallbackPoster);
-                        }, 5000);
+                        }, 6000);
 
                         // 尝试跳转到目标帧
                         try {
@@ -590,13 +590,13 @@
 
                             try {
                                 const canvas = document.createElement('canvas');
-                                canvas.width = 800;
-                                canvas.height = 600; // 固定比例避免计算错误
+                                canvas.width = 1280;
+                                canvas.height = 960; // 固定比例避免计算错误
                                 const ctx = canvas.getContext('2d');
                                 ctx.drawImage(tempVideo, 0, 0, canvas.width, canvas.height);
                                 
                                 // 生成封面图（压缩质量0.7，平衡清晰度和体积）
-                                const frameUrl = canvas.toDataURL('image/jpeg', 0.7);
+                                const frameUrl = canvas.toDataURL('image/jpeg', 1);
                                 cleanupTempVideo(tempVideo);
                                 resolve(frameUrl);
                             } catch (e) {
