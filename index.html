@@ -23,10 +23,6 @@
                     fontFamily: {
                         sans: ['Inter', 'Helvetica', 'Arial', 'sans-serif'],
                         display: ['"Playfair Display"', 'serif']
-                    },
-                    transitionProperty: {
-                        'color': 'color',
-                        'bg': 'background-color',
                     }
                 }
             }
@@ -71,7 +67,7 @@
             .media-container {
                 overflow: hidden;
                 position: relative;
-                min-height: 200px; /* 防止加载时布局塌陷 */
+                min-height: 200px;
                 background-color: var(--color-bg-light);
             }
             .media-loading {
@@ -142,11 +138,11 @@
             .temp-video {
                 display: none !important;
             }
-            /* 黑夜模式切换开关 */
+            /* 黑夜模式切换开关（带太阳月亮图标） */
             .theme-toggle {
                 position: relative;
-                width: 50px;
-                height: 24px;
+                width: 56px;
+                height: 26px;
                 margin-left: 1rem;
             }
             .theme-toggle input {
@@ -170,8 +166,8 @@
                 content: "";
                 height: 18px;
                 width: 18px;
-                left: 3px;
-                bottom: 3px;
+                left: 4px;
+                bottom: 4px;
                 background-color: white;
                 transition: 0.4s;
                 border-radius: 50%;
@@ -180,7 +176,22 @@
                 background-color: var(--color-accent);
             }
             input:checked + .theme-slider:before {
-                transform: translateX(26px);
+                transform: translateX(30px);
+            }
+            /* 太阳月亮图标 */
+            .theme-icon {
+                position: absolute;
+                z-index: 1;
+                top: 50%;
+                transform: translateY(-50%);
+                font-size: 12px;
+                color: white;
+            }
+            .sun-icon {
+                left: 8px;
+            }
+            .moon-icon {
+                right: 8px;
             }
             /* 黑夜模式过渡动画 */
             body {
@@ -193,7 +204,7 @@
                 transition: filter 0.5s ease;
             }
             .dark img, .dark video {
-                filter: brightness(0.85); /* 深色模式下降低媒体亮度 */
+                filter: brightness(0.9);
             }
         }
     </style>
@@ -201,7 +212,7 @@
     <!-- CSS变量定义 -->
     <style>
         :root {
-            /* 浅色模式颜色 */
+            /* 白天模式（保持原样） */
             --color-primary: #1a1a1a;
             --color-secondary: #666666;
             --color-accent: #d4af37;
@@ -210,13 +221,13 @@
             --color-bg-dark: #0f0f0f;
         }
         
-        /* 深色模式颜色 */
+        /* 黑夜模式（大厂风格优化） */
         .dark {
-            --color-primary: #f8f8f8;
-            --color-secondary: #bbbbbb;
-            --color-accent: #f0d779;
-            --color-bg-light: #121212;
-            --color-bg-white: #1a1a1a;
+            --color-primary: #f5f5f5; /* 浅灰文本，提升可读性 */
+            --color-secondary: #bbbbbb; /* 次要文本 */
+            --color-accent: #f0d779; /* 金色保持，但略亮 */
+            --color-bg-light: #121212; /* 主背景深灰 */
+            --color-bg-white: #1e1e1e; /* 卡片背景 */
         }
     </style>
 </head>
@@ -236,10 +247,14 @@
                         <li><a href="#videos" class="text-sm uppercase tracking-wider hover:text-accent transition-colors">视频</a></li>
                         <li><a href="#about" class="text-sm uppercase tracking-wider hover:text-accent transition-colors">关于</a></li>
                         <li><a href="#contact" class="text-sm uppercase tracking-wider hover:text-accent transition-colors">联系</a></li>
+                        <!-- 状态检查选项卡 -->
+                        <li><a href="check.html" class="text-sm uppercase tracking-wider hover:text-accent transition-colors">状态检查</a></li>
                     </ul>
                     
-                    <!-- 黑夜模式切换开关 -->
+                    <!-- 黑夜模式切换开关（带太阳月亮图标） -->
                     <label class="theme-toggle">
+                        <i class="theme-icon sun-icon fa fa-sun-o"></i>
+                        <i class="theme-icon moon-icon fa fa-moon-o"></i>
                         <input type="checkbox" id="theme-switch">
                         <span class="theme-slider"></span>
                     </label>
@@ -248,6 +263,8 @@
                 <!-- 移动端菜单按钮 -->
                 <div class="flex items-center md:hidden">
                     <label class="theme-toggle">
+                        <i class="theme-icon sun-icon fa fa-sun-o"></i>
+                        <i class="theme-icon moon-icon fa fa-moon-o"></i>
                         <input type="checkbox" id="mobile-theme-switch">
                         <span class="theme-slider"></span>
                     </label>
@@ -266,6 +283,8 @@
                     <li><a href="#videos" class="block py-2 text-sm uppercase tracking-wider hover:text-accent transition-colors">视频</a></li>
                     <li><a href="#about" class="block py-2 text-sm uppercase tracking-wider hover:text-accent transition-colors">关于</a></li>
                     <li><a href="#contact" class="block py-2 text-sm uppercase tracking-wider hover:text-accent transition-colors">联系</a></li>
+                    <!-- 移动端状态检查选项卡 -->
+                    <li><a href="check.html" class="block py-2 text-sm uppercase tracking-wider hover:text-accent transition-colors">状态检查</a></li>
                 </ul>
             </div>
         </div>
@@ -293,7 +312,6 @@
                 <p class="text-lg md:text-xl opacity-90 mb-8 max-w-lg font-light">
                     用镜头讲述故事，每一段影像都是时间的诗篇
                 </p>
-                <!-- 改进的按钮，带有悬停动画 -->
                 <a href="#photos" class="btn-primary inline-block border border-white text-white px-8 py-3 text-sm uppercase tracking-wider relative">
                     浏览作品集
                 </a>
@@ -548,13 +566,11 @@
                     const targetElement = document.querySelector(targetId);
                     
                     if (targetElement) {
-                        // 平滑滚动到目标位置
                         window.scrollTo({
                             top: targetElement.offsetTop - 80,
                             behavior: 'smooth'
                         });
                         
-                        // 滚动时为目标区域添加动画
                         setTimeout(() => {
                             targetElement.classList.add('section-visible');
                         }, 100);
@@ -569,7 +585,6 @@
         
         /**
          * 初始化黑夜模式
-         * 从localStorage读取用户偏好，设置初始状态
          */
         function initDarkMode() {
             const isDarkMode = localStorage.getItem('darkMode') === 'true' || 
@@ -604,10 +619,7 @@
          * 设置滚动动画监听
          */
         function setupScrollAnimation() {
-            // 初始检查可见区域
             checkVisibility();
-            
-            // 滚动时检查可见区域
             window.addEventListener('scroll', checkVisibility);
         }
         
@@ -617,7 +629,6 @@
         function checkVisibility() {
             const windowHeight = window.innerHeight;
             
-            // 检查区域淡入动画
             sections.forEach(section => {
                 const sectionTop = section.getBoundingClientRect().top;
                 if (sectionTop < windowHeight * 0.85) {
@@ -625,11 +636,9 @@
                 }
             });
             
-            // 检查媒体项淡入动画
             document.querySelectorAll('.media-item:not(.visible)').forEach((item, index) => {
                 const itemTop = item.getBoundingClientRect().top;
                 if (itemTop < windowHeight * 0.9) {
-                    // 错开动画时间，创建流畅的序列效果
                     setTimeout(() => {
                         item.classList.add('visible');
                     }, index * 50);
@@ -638,50 +647,38 @@
         }
         
         /**
-         * 优化：获取视频中间帧作为封面（解决第一帧黑屏问题）
-         * @param {string} videoUrl - 视频地址
-         * @param {string} ext - 视频文件后缀
-         * @returns {Promise<string>} 中间帧图片的dataURL
+         * 获取视频中间帧作为封面
          */
         function getVideoFirstFrame(videoUrl, ext) {
-            return new Promise((resolve, reject) => {
-                // 1. 创建隐藏的临时视频元素（处理跨域）
+            return new Promise((resolve) => {
                 const tempVideo = document.createElement('video');
                 tempVideo.src = videoUrl;
-                tempVideo.preload = 'auto'; // 改为auto确保视频数据加载
-                tempVideo.crossOrigin = 'anonymous'; // 解决跨域canvas污染问题
+                tempVideo.preload = 'auto';
+                tempVideo.crossOrigin = 'anonymous';
                 tempVideo.classList.add('temp-video');
                 document.body.appendChild(tempVideo);
 
-                // 超时处理（8秒未加载完成则用备用图）
                 const timeout = setTimeout(() => {
                     cleanupAndResolve(tempVideo, `https://picsum.photos/800/600?video-placeholder-${Date.now()}`);
                 }, 8000);
                 
-                // 2. 视频元数据加载完成（可获取总时长）
                 tempVideo.addEventListener('loadedmetadata', () => {
-                    // 计算中间帧时间（总时长的30%位置，避免开头黑屏）
-                    const frameTime = tempVideo.duration * 0.3 || 1; // 至少1秒位置
+                    const frameTime = tempVideo.duration * 0.3 || 1;
                     
-                    // 处理异常时长（如视频损坏导致时长为0）
                     if (isNaN(frameTime) || frameTime <= 0) {
                         clearTimeout(timeout);
                         cleanupAndResolve(tempVideo, `https://picsum.photos/800/600?video-placeholder-${Date.now()}`);
                         return;
                     }
 
-                    // 3. 将视频定位到目标帧位置
                     tempVideo.currentTime = frameTime;
                 });
                 
-                // 4. 视频定位完成后（seeked事件）绘制帧
                 tempVideo.addEventListener('seeked', () => {
                     clearTimeout(timeout);
                     
                     try {
-                        // 创建canvas绘制帧
                         const canvas = document.createElement('canvas');
-                        // 保持视频比例
                         const aspectRatio = tempVideo.videoWidth / tempVideo.videoHeight;
                         const canvasWidth = 800;
                         const canvasHeight = Math.round(canvasWidth / aspectRatio);
@@ -689,31 +686,24 @@
                         canvas.width = canvasWidth;
                         canvas.height = canvasHeight;
                         const ctx = canvas.getContext('2d');
-                        
-                        // 绘制视频帧
                         ctx.drawImage(tempVideo, 0, 0, canvas.width, canvas.height);
                         
-                        // 转为图片dataURL（质量0.8优化性能）
                         const frameUrl = canvas.toDataURL('image/jpeg', 0.8);
-                        
                         cleanupAndResolve(tempVideo, frameUrl);
                     } catch (e) {
-                        // 绘制失败时用备用图
                         cleanupAndResolve(tempVideo, `https://picsum.photos/800/600?video-placeholder-${Date.now()}`);
                     }
-                }, { once: true }); // 确保事件只触发一次
+                }, { once: true });
                 
-                // 5. 视频加载失败时处理
                 tempVideo.addEventListener('error', () => {
                     clearTimeout(timeout);
-                    console.error('视频加载失败:', tempVideo.error);
                     cleanupAndResolve(tempVideo, `https://picsum.photos/800/600?video-placeholder-${Date.now()}`);
                 });
             });
         }
         
         /**
-         * 清理临时视频元素并返回结果
+         * 清理临时视频元素
          */
         function cleanupAndResolve(tempVideo, result) {
             if (tempVideo && tempVideo.parentNode) {
@@ -738,14 +728,11 @@
         
         /**
          * 加载媒体文件并显示
-         * @param {string} type 类型 (photos 或 videos)
          */
         async function loadMedia(type) {
             try {
-                // 获取文件夹中的文件列表
                 const files = await fetchGitHubFiles(type);
                 
-                // 筛选媒体文件
                 const mediaFiles = files.filter(file => {
                     const ext = file.name.split('.').pop().toLowerCase();
                     return type === 'photos' 
@@ -753,20 +740,14 @@
                         : VIDEO_EXTENSIONS.includes(ext);
                 });
                 
-                // 按最后修改时间排序（最新的在前）
                 mediaFiles.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
-                
-                // 保存到全局变量
                 allMedia[type] = mediaFiles;
                 
-                // 获取对应的容器
                 const container = type === 'photos' ? photosContainer : videosContainer;
                 const loadingEl = type === 'photos' ? photosLoading : videosLoading;
                 
-                // 清空容器
                 container.innerHTML = '';
                 
-                // 如果没有文件
                 if (mediaFiles.length === 0) {
                     container.innerHTML = `
                         <div class="col-span-full text-center py-24 text-secondary">
@@ -778,18 +759,15 @@
                     return;
                 }
                 
-                // 为每个媒体文件创建项目（用for...of保证异步顺序）
                 for (const [index, file] of mediaFiles.entries()) {
                     const fileName = file.name;
                     const fileUrl = `https://raw.githubusercontent.com/${GITHUB_USER}/${REPO_NAME}/${BRANCH}/${type}/${fileName}`;
                     const ext = fileName.split('.').pop().toLowerCase();
                     const baseName = fileName.substring(0, fileName.lastIndexOf('.')).replace(/_/g, ' ').replace(/-/g, ' ');
                     
-                    // 创建媒体项
                     const mediaItem = document.createElement('div');
                     mediaItem.className = 'media-item';
                     
-                    // 照片逻辑
                     if (type === 'photos') {
                         mediaItem.innerHTML = `
                             <div class="media-container">
@@ -802,10 +780,7 @@
                                 </div>
                             </div>
                         `;
-                    } 
-                    // 视频逻辑（优化封面显示）
-                    else {
-                        // 先显示加载状态
+                    } else {
                         mediaItem.innerHTML = `
                             <div class="media-container">
                                 <div class="media-loading" id="loading-${index}">
@@ -827,7 +802,6 @@
                             </div>
                         `;
                         
-                        // 异步获取视频封面并设置
                         const loadingEl = mediaItem.querySelector(`#loading-${index}`);
                         const videoEl = mediaItem.querySelector('video');
                         
@@ -835,16 +809,13 @@
                             const posterUrl = await getVideoFirstFrame(fileUrl, ext);
                             videoEl.poster = posterUrl;
                         } catch (e) {
-                            // 异常时使用备用封面
                             videoEl.poster = `https://picsum.photos/800/600?video-placeholder-${Date.now()}`;
                         } finally {
-                            // 隐藏加载指示器
                             loadingEl.style.opacity = 0;
                             setTimeout(() => loadingEl.style.display = 'none', 300);
                         }
                     }
                     
-                    // 点击打开灯箱
                     mediaItem.addEventListener('click', () => {
                         openLightbox(type, index);
                     });
@@ -852,10 +823,7 @@
                     container.appendChild(mediaItem);
                 }
                 
-                // 隐藏加载指示器
                 loadingEl.classList.add('hidden');
-                
-                // 检查可见性以触发初始动画
                 setTimeout(checkVisibility, 100);
                 
             } catch (error) {
@@ -869,8 +837,6 @@
         
         /**
          * 从GitHub API获取文件夹中的文件列表
-         * @param {string} folder 文件夹路径
-         * @returns {Promise<Array>} 文件列表
          */
         async function fetchGitHubFiles(folder) {
             const apiUrl = `https://api.github.com/repos/${GITHUB_USER}/${REPO_NAME}/contents/${folder}?ref=${BRANCH}`;
@@ -878,7 +844,6 @@
             const response = await fetch(apiUrl);
             
             if (!response.ok) {
-                // 尝试使用jsDelivr作为备用源（解决GitHub API限流问题）
                 console.warn(`GitHub API请求失败，尝试备用源: ${folder}`);
                 return mockFilesList(folder);
             }
@@ -887,11 +852,9 @@
         }
         
         /**
-         * 备用：模拟文件列表（当GitHub API不可用时）
-         * 实际使用时可根据实际文件修改
+         * 备用：模拟文件列表
          */
         function mockFilesList(folder) {
-            // 这里只是模拟数据，实际项目中需要替换为真实的文件列表
             const mockPhotos = [
                 { name: 'nature-01.jpg', updated_at: '2024-01-15T10:00:00Z' },
                 { name: 'city-scape.jpg', updated_at: '2024-01-10T14:30:00Z' },
@@ -910,8 +873,6 @@
         
         /**
          * 打开灯箱显示媒体
-         * @param {string} type 媒体类型 (photos 或 videos)
-         * @param {number} index 媒体索引
          */
         function openLightbox(type, index) {
             const mediaList = allMedia[type];
@@ -926,7 +887,6 @@
             const ext = fileName.split('.').pop().toLowerCase();
             const baseName = fileName.substring(0, fileName.lastIndexOf('.')).replace(/_/g, ' ').replace(/-/g, ' ');
             
-            // 更新灯箱内容
             if (type === 'photos') {
                 lightboxContent.innerHTML = `
                     <div class="flex items-center justify-center">
@@ -942,7 +902,6 @@
                         </video>
                     </div>
                 `;
-                // 自动播放视频
                 setTimeout(() => {
                     const video = lightboxContent.querySelector('video');
                     if (video) video.play().catch(e => console.warn('视频自动播放失败:', e));
@@ -951,7 +910,6 @@
             
             lightboxCaption.textContent = baseName;
             
-            // 显示灯箱
             lightbox.classList.remove('hidden');
             lightbox.classList.add('flex');
             document.body.style.overflow = 'hidden';
@@ -961,7 +919,6 @@
          * 关闭灯箱
          */
         function closeLightboxHandler() {
-            // 暂停视频播放
             const video = lightboxContent.querySelector('video');
             if (video) video.pause();
             
@@ -989,9 +946,7 @@
         }
         
         /**
-         * 转义HTML特殊字符，防止XSS
-         * @param {string} text 要转义的文本
-         * @returns {string} 转义后的文本
+         * 转义HTML特殊字符
          */
         function escapeHtml(text) {
             if (!text) return '';
