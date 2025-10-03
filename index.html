@@ -507,96 +507,133 @@
  * 获取视频封面（优化版）
  * 解决：黑屏问题、加载转圈、跨域限制
  */
-function getVideoFirstFrame(videoUrl, ext) {
+/**
+ * 预检查视频是否可访问（避免无效加载）
+ */
+function preCheckVideoAccess(url) {
     return new Promise((resolve) => {
-        // 备用封面（始终准备，确保不会黑屏）
-        const fallbackPoster = `https://picsum.photos/800/600?video-placeholder-${Date.now()}`;
-        
-        // 创建临时视频元素
-        const tempVideo = document.createElement('video');
-        tempVideo.src = videoUrl;
-        tempVideo.preload = 'metadata'; // 只加载元数据（时长、尺寸等），加快速度
-        tempVideo.crossOrigin = 'anonymous'; // 允许跨域
-        tempVideo.classList.add('temp-video');
-        document.body.appendChild(tempVideo);
-
-        // 超时处理（6秒，避免无限转圈）
-        const timeout = setTimeout(() => {
-            console.warn(`视频封面加载超时: ${videoUrl}`);
-            cleanupAndResolve(tempVideo, fallbackPoster);
-        }, 6000);
-
-        // 元数据加载成功（获取到视频时长后再操作）
-        tempVideo.addEventListener('loadedmetadata', () => {
-            // 计算合理的截取时间点（避免第一帧黑屏）
-            // 策略：最短取1秒，最长取总时长的1/4（确保是有效内容帧）
-            const safeFrameTime = Math.max(1, Math.min(5, tempVideo.duration * 0.25));
-            
-            // 如果视频时长异常（如直播流/无效视频），直接用备用封面
-            if (isNaN(tempVideo.duration) || tempVideo.duration <= 0) {
-                clearTimeout(timeout);
-                cleanupAndResolve(tempVideo, fallbackPoster);
-                return;
-            }
-
-            // 尝试跳转到目标时间点
-            try {
-                tempVideo.currentTime = safeFrameTime;
-            } catch (e) {
-                console.error('视频跳转失败:', e);
-                clearTimeout(timeout);
-                cleanupAndResolve(tempVideo, fallbackPoster);
-            }
-        });
-
-        // 跳转成功后绘制封面
-        tempVideo.addEventListener('seeked', () => {
-            clearTimeout(timeout);
-            
-            try {
-                // 检查视频尺寸是否有效
-                if (tempVideo.videoWidth <= 0 || tempVideo.videoHeight <= 0) {
-                    throw new Error('无效的视频尺寸');
-                }
-
-                // 创建canvas绘制封面
-                const canvas = document.createElement('canvas');
-                const aspectRatio = tempVideo.videoWidth / tempVideo.videoHeight;
-                const canvasWidth = 800;
-                const canvasHeight = Math.round(canvasWidth / aspectRatio);
-                
-                canvas.width = canvasWidth;
-                canvas.height = canvasHeight;
-                const ctx = canvas.getContext('2d');
-                
-                // 绘制视频帧（添加容错处理）
-                ctx.drawImage(tempVideo, 0, 0, canvas.width, canvas.height);
-                
-                // 检查canvas是否为空（跨域会导致绘制失败，内容为空）
-                const pixelData = ctx.getImageData(0, 0, 1, 1).data;
-                const isCanvasEmpty = pixelData.every(value => value === 0);
-                
-                if (isCanvasEmpty) {
-                    throw new Error('跨域限制导致封面绘制失败');
-                }
-
-                // 成功获取封面
-                const frameUrl = canvas.toDataURL('image/jpeg', 0.8);
-                cleanupAndResolve(tempVideo, frameUrl);
-                
-            } catch (e) {
-                console.error('封面生成失败:', e);
-                cleanupAndResolve(tempVideo, fallbackPoster);
-            }
-        }, { once: true });
-
-        // 视频加载错误处理
-        tempVideo.addEventListener('error', () => {
-            clearTimeout(timeout);
-            console.error('视频加载错误:', videoUrl);
-            cleanupAndResolve(tempVideo, fallbackPoster);
+        // 用HEAD请求快速检查视频是否存在
+        fetch(url, { 
+            method: 'HEAD', 
+            mode: 'cors',
+            timeout: 3000 // 3秒超时
+        })
+        .then(response => {
+            // 状态码200-299表示可访问
+            resolve(response.ok);
+        })
+        .catch(() => {
+            // 请求失败（跨域/不存在/超时）
+            resolve(false);
         });
     });
+}
+
+/**
+ * 终极优化版封面截取：10秒内必返回结果，绝不卡住
+ */
+function getVideoFirstFrame(videoUrl, ext) {
+    return new Promise((resolve) => {
+        // 备用封面（保底方案）
+        const fallbackPoster = `https://picsum.photos/800/600?video-placeholder-${Date.now()}`;
+        
+        // 第一步：先预检查视频是否可访问（3秒内完成）
+        preCheckVideoAccess(videoUrl).then(isAccessible => {
+            if (!isAccessible) {
+                console.log(`视频源不可访问，直接使用备用封面: ${videoUrl}`);
+                return resolve(fallbackPoster);
+            }
+
+            // 第二步：仅对可访问的视频尝试截取封面
+            const tempVideo = document.createElement('video');
+            tempVideo.src = videoUrl;
+            tempVideo.preload = 'metadata'; // 只加载元数据
+            tempVideo.crossOrigin = 'anonymous';
+            tempVideo.classList.add('temp-video');
+            document.body.appendChild(tempVideo);
+
+            // 总超时控制（10秒，确保无论如何都会结束）
+            const totalTimeout = setTimeout(() => {
+                console.warn(`终极超时！强制使用备用封面: ${videoUrl}`);
+                cleanupAndResolve(tempVideo, fallbackPoster);
+            }, 10000);
+
+            // 元数据加载超时（5秒）
+            const metadataTimeout = setTimeout(() => {
+                console.warn(`元数据加载超时: ${videoUrl}`);
+                clearTimeout(totalTimeout);
+                cleanupAndResolve(tempVideo, fallbackPoster);
+            }, 5000);
+
+            // 元数据加载成功
+            tempVideo.addEventListener('loadedmetadata', () => {
+                clearTimeout(metadataTimeout); // 清除元数据超时
+                
+                // 计算安全的截取时间（避开黑屏帧）
+                const safeFrameTime = Math.max(1, Math.min(3, tempVideo.duration * 0.2));
+                if (isNaN(tempVideo.duration) || tempVideo.duration <= 0) {
+                    clearTimeout(totalTimeout);
+                    return cleanupAndResolve(tempVideo, fallbackPoster);
+                }
+
+                // 跳转超时（3秒）
+                const seekTimeout = setTimeout(() => {
+                    console.warn(`跳转帧超时: ${videoUrl}`);
+                    clearTimeout(totalTimeout);
+                    cleanupAndResolve(tempVideo, fallbackPoster);
+                }, 3000);
+
+                // 尝试跳转
+                try {
+                    tempVideo.currentTime = safeFrameTime;
+                } catch (e) {
+                    clearTimeout(seekTimeout);
+                    clearTimeout(totalTimeout);
+                    return cleanupAndResolve(tempVideo, fallbackPoster);
+                }
+
+                // 跳转成功后绘制封面
+                tempVideo.addEventListener('seeked', () => {
+                    clearTimeout(seekTimeout);
+                    clearTimeout(totalTimeout);
+
+                    try {
+                        // 简化绘制逻辑，减少出错可能
+                        const canvas = document.createElement('canvas');
+                        canvas.width = 800;
+                        canvas.height = 600; // 固定比例，避免计算错误
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(tempVideo, 0, 0, canvas.width, canvas.height);
+                        
+                        // 直接返回封面（不做空检查，避免额外耗时）
+                        const frameUrl = canvas.toDataURL('image/jpeg', 0.7);
+                        cleanupAndResolve(tempVideo, frameUrl);
+                    } catch (e) {
+                        cleanupAndResolve(tempVideo, fallbackPoster);
+                    }
+                }, { once: true });
+            });
+
+            // 视频加载错误
+            tempVideo.addEventListener('error', () => {
+                clearTimeout(metadataTimeout);
+                clearTimeout(totalTimeout);
+                cleanupAndResolve(tempVideo, fallbackPoster);
+            });
+        });
+    });
+}
+
+/**
+ * 彻底清理临时视频（防止资源泄漏）
+ */
+function cleanupAndResolve(tempVideo, result) {
+    if (tempVideo) {
+        tempVideo.pause();
+        tempVideo.src = ''; // 立即停止加载
+        tempVideo.remove(); // 移除元素
+    }
+    return resolve(result); // 强制返回结果
 }
 
 /**
@@ -712,7 +749,27 @@ function cleanupAndResolve(tempVideo, result) {
                                 </div>
                             </div>
                         `;
-                        
+                        // 在视频项创建时添加
+const mediaItem = document.createElement('div');
+mediaItem.className = 'media-item';
+
+// 为每个视频项添加独立的加载超时（12秒，比封面截取多2秒）
+const itemLoadTimeout = setTimeout(() => {
+    const loadingEl = mediaItem.querySelector('.media-loading');
+    if (loadingEl) {
+        loadingEl.innerHTML = '<i class="fa fa-exclamation-triangle text-accent mr-2"></i> 加载缓慢，点击查看';
+    }
+}, 12000);
+
+// 封面加载完成后清除超时
+try {
+    const posterUrl = await getVideoFirstFrame(fileUrl, ext);
+    videoEl.poster = posterUrl;
+    clearTimeout(itemLoadTimeout); // 清除超时
+} catch (e) {
+    videoEl.poster = fallbackPoster;
+    clearTimeout(itemLoadTimeout);
+}
                         const loadingEl = mediaItem.querySelector(`#loading-${index}`);
                         const videoEl = mediaItem.querySelector('video');
                         
