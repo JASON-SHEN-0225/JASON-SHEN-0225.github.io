@@ -120,6 +120,10 @@
             .btn-primary:hover::after {
                 width: 100%;
             }
+            /* 隐藏用于截取帧的临时视频 */
+            .temp-video {
+                display: none;
+            }
         }
     </style>
 </head>
@@ -222,8 +226,7 @@
                 <h2 class="text-3xl md:text-4xl font-display font-light mb-4">视频作品</h2>
                 <div class="w-20 h-px bg-accent mx-auto mb-6"></div>
                 <p class="text-secondary max-w-2xl mx-auto">延时摄影与动态影像，捕捉时间的流动</p>
-                <p class="text-secondary max-w-2xl mx-auto">视频封面为随机照片，并非视频内容</p>
-                
+                <!-- 【删除】原随机封面说明文字 -->
                 <!-- 加载指示器 -->
                 <div id="videos-loading" class="mt-12 flex justify-center items-center">
                     <i class="fa fa-circle-o-notch fa-spin text-xl text-secondary loading-spinner"></i>
@@ -256,9 +259,6 @@
                     <p class="text-secondary mb-6 leading-relaxed">
                     相信每一张照片都有自己的灵魂与故事。透过镜头，观察世界的细微之处，捕捉那些稍纵即逝的光影瞬间。
                     </p>
-                   
-                        
-                    </p>
                     <a href="#contact" class="btn-primary inline-block border border-primary text-primary px-8 py-3 text-sm uppercase tracking-wider relative">
                         联系我
                     </a>
@@ -268,7 +268,6 @@
     </section>
 
     <!-- 联系区域 -->
-    
     <section id="contact" class="py-24 bg-light section-fade-in">
         <div class="container mx-auto px-6 max-w-4xl">
             <div class="text-center mb-16">
@@ -477,6 +476,49 @@
         }
         
         /**
+         * 【新增】获取视频第一帧作为封面（核心功能）
+         * @param {string} videoUrl - 视频地址
+         * @returns {Promise<string>} 第一帧图片的dataURL
+         */
+        function getVideoFirstFrame(videoUrl) {
+            return new Promise((resolve, reject) => {
+                // 1. 创建隐藏的临时视频元素（仅用于加载帧，不显示）
+                const tempVideo = document.createElement('video');
+                tempVideo.src = videoUrl;
+                tempVideo.preload = 'metadata'; // 仅加载元数据（含第一帧），优化性能
+                tempVideo.classList.add('temp-video');
+                document.body.appendChild(tempVideo);
+                
+                // 2. 视频元数据加载完成（可获取宽高、第一帧）
+                tempVideo.addEventListener('loadeddata', () => {
+                    // 3. 创建canvas用于绘制第一帧
+                    const canvas = document.createElement('canvas');
+                    // 设置canvas宽高与视频一致（保持比例）
+                    canvas.width = tempVideo.videoWidth;
+                    canvas.height = tempVideo.videoHeight;
+                    
+                    // 4. 在canvas上绘制视频第一帧（currentTime默认0，即第一帧）
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(tempVideo, 0, 0, canvas.width, canvas.height);
+                    
+                    // 5. 将canvas转为图片dataURL（base64格式，可直接作为poster）
+                    const frameUrl = canvas.toDataURL('image/jpeg');
+                    
+                    // 6. 清理临时元素，避免内存占用
+                    document.body.removeChild(tempVideo);
+                    resolve(frameUrl);
+                });
+                
+                // 7. 视频加载失败时，返回备用图片
+                tempVideo.addEventListener('error', () => {
+                    document.body.removeChild(tempVideo);
+                    // 备用图片（避免封面空白）
+                    resolve('https://picsum.photos/800/600?video-placeholder');
+                });
+            });
+        }
+        
+        /**
          * 加载媒体文件并显示
          * @param {string} type 类型 (photos 或 videos)
          */
@@ -519,7 +561,7 @@
                 }
                 
                 // 为每个媒体文件创建项目
-                mediaFiles.forEach((file, index) => {
+                for (const [index, file] of mediaFiles.entries()) { // 用for...of保证异步顺序
                     const fileName = file.name;
                     const fileUrl = `https://raw.githubusercontent.com/${GITHUB_USER}/${REPO_NAME}/${BRANCH}/${type}/${fileName}`;
                     const baseName = fileName.substring(0, fileName.lastIndexOf('.'));
@@ -527,92 +569,39 @@
                     // 创建媒体项
                     const mediaItem = document.createElement('div');
                     mediaItem.className = 'media-item';
-
- // 修改图片获取函数，解决跨域问题
-async function getRandomImageUrl() {
-    try {
-        // 方案1：使用支持CORS的Unsplash随机图片（推荐）
-        // 每次刷新会自动生成不同图片
-        const unsplashUrl = `https://source.unsplash.com/random/800x600?sig=${Math.random()}`;
-        return unsplashUrl;
-
-        // 方案2：必应API（需配合后端代理，否则仍会跨域）
-        // 若有后端服务，可通过代理转发请求（示例代理地址需替换为你的实际代理）
-        /*
-        const proxyUrl = 'https://你的后端代理地址'; // 例如 '/api/proxy?url='
-        const bingApi = 'https://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1&mkt=zh-CN';
-        const response = await fetch(proxyUrl + encodeURIComponent(bingApi));
-        const data = await response.json();
-        if (data.images && data.images.length > 0) {
-            return `https://www.bing.com${data.images[0].url}`;
-        }
-        */
-    } catch (error) {
-        console.error('获取图片失败:', error);
-        // 最终 fallback 方案
-        return `https://picsum.photos/800/600?random=${Math.random()}`;
-    }
-}
-
-// 媒体项生成代码（保持结构不变，仅替换图片获取逻辑）
-if (type === 'photos') {
-    mediaItem.innerHTML = `
-        <div class="media-container">
-            <img src="${fileUrl}" alt="${baseName}" class="w-full h-auto transition-transform duration-700 ease-out">
-            <div class="media-overlay">
-                <h3 class="text-white font-medium text-lg">${escapeHtml(baseName)}</h3>
-            </div>
-        </div>
-    `;
-} else {
-    // 使用修复跨域后的图片获取函数
-    getRandomImageUrl().then(imageUrl => {
-        mediaItem.innerHTML = `
-            <div class="media-container">
-                <video poster="${imageUrl}" class="w-full h-auto transition-transform duration-700 ease-out">
-                    <source src="${fileUrl}" type="video/${fileName.split('.').pop()}">
-                </video>
-                <div class="media-overlay flex items-end">
-                    <div>
-                        <h3 class="text-white font-medium text-lg">${escapeHtml(baseName)}</h3>
-                        <div class="mt-2 bg-accent/80 w-10 h-10 rounded-full flex items-center justify-center">
-                            <i class="fa fa-play text-white"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-    });
-}
-
-
-                    // // 根据类型创建不同的媒体元素
-                    // if (type === 'photos') {
-                    //     mediaItem.innerHTML = `
-                    //         <div class="media-container">
-                    //             <img src="${fileUrl}" alt="${baseName}" class="w-full h-auto transition-transform duration-700 ease-out">
-                    //             <div class="media-overlay">
-                    //                 <h3 class="text-white font-medium text-lg">${escapeHtml(baseName)}</h3>
-                    //             </div>
-                    //         </div>
-                    //     `;
-                    // } else {
-                    //     mediaItem.innerHTML = `
-                    //         <div class="media-container">
-                    //             <video poster="https://picsum.photos/800/600?random=${Math.random()}" class="w-full h-auto transition-transform duration-700 ease-out">
-                    //                 <source src="${fileUrl}" type="video/${fileName.split('.').pop()}">
-                    //             </video>
-                    //             <div class="media-overlay flex items-end">
-                    //                 <div>
-                    //                     <h3 class="text-white font-medium text-lg">${escapeHtml(baseName)}</h3>
-                    //                     <div class="mt-2 bg-accent/80 w-10 h-10 rounded-full flex items-center justify-center">
-                    //                         <i class="fa fa-play text-white"></i>
-                    //                     </div>
-                    //                 </div>
-                    //             </div>
-                    //         </div>
-                    //     `;
-                    // }
+                    
+                    // 照片逻辑（保持不变）
+                    if (type === 'photos') {
+                        mediaItem.innerHTML = `
+                            <div class="media-container">
+                                <img src="${fileUrl}" alt="${baseName}" class="w-full h-auto transition-transform duration-700 ease-out">
+                                <div class="media-overlay">
+                                    <h3 class="text-white font-medium text-lg">${escapeHtml(baseName)}</h3>
+                                </div>
+                            </div>
+                        `;
+                    } 
+                    // 【修改】视频逻辑：用第一帧作为封面
+                    else {
+                        // 获取视频第一帧（异步操作）
+                        const frameUrl = await getVideoFirstFrame(fileUrl);
+                        // 生成视频元素，poster设为第一帧
+                        mediaItem.innerHTML = `
+                            <div class="media-container">
+                                <video poster="${frameUrl}" class="w-full h-auto transition-transform duration-700 ease-out">
+                                    <source src="${fileUrl}" type="video/${fileName.split('.').pop()}">
+                                </video>
+                                <div class="media-overlay flex items-end">
+                                    <div>
+                                        <h3 class="text-white font-medium text-lg">${escapeHtml(baseName)}</h3>
+                                        <div class="mt-2 bg-accent/80 w-10 h-10 rounded-full flex items-center justify-center">
+                                            <i class="fa fa-play text-white"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }
                     
                     // 点击打开灯箱
                     mediaItem.addEventListener('click', () => {
@@ -620,7 +609,7 @@ if (type === 'photos') {
                     });
                     
                     container.appendChild(mediaItem);
-                });
+                }
                 
                 // 隐藏加载指示器
                 loadingEl.classList.add('hidden');
@@ -741,4 +730,3 @@ if (type === 'photos') {
     </script>
 </body>
 </html>
-    
