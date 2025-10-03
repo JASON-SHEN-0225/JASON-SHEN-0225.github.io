@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>我的自动更新影像集</title>
+    <title>光影集 | 摄影作品</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
     
@@ -13,18 +13,23 @@
             theme: {
                 extend: {
                     colors: {
-                        primary: '#3B82F6',
-                        secondary: '#10B981',
-                        dark: '#1F2937',
-                        light: '#F3F4F6'
+                        primary: '#1a1a1a',
+                        secondary: '#666666',
+                        accent: '#d4af37',
+                        light: '#f8f8f8',
+                        dark: '#0f0f0f'
                     },
                     fontFamily: {
-                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        sans: ['Inter', 'Helvetica', 'Arial', 'sans-serif'],
+                        display: ['"Playfair Display"', 'serif']
                     }
                 }
             }
         }
     </script>
+    
+    <!-- 导入字体 -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600&family=Inter:wght@300;400;500&display=swap">
     
     <style type="text/tailwindcss">
         @layer utilities {
@@ -34,68 +39,166 @@
             .gallery-grid {
                 display: grid;
                 grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-                gap: 1.5rem;
+                gap: 2rem;
             }
-            .media-card {
-                transition: transform 0.3s ease, box-shadow 0.3s ease;
+            @screen md {
+                .gallery-grid {
+                    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+                }
             }
-            .media-card:hover {
-                transform: translateY(-5px);
-                box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            .media-item {
+                transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+                cursor: pointer;
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            .media-item.visible {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            .media-item:hover .media-overlay {
+                opacity: 1;
+            }
+            .media-item:hover img,
+            .media-item:hover video {
+                transform: scale(1.02);
+            }
+            .media-container {
+                overflow: hidden;
+                position: relative;
+            }
+            .media-overlay {
+                position: absolute;
+                inset: 0;
+                background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 100%);
+                opacity: 0;
+                transition: opacity 0.4s ease;
+                display: flex;
+                flex-direction: column;
+                justify-content: flex-end;
+                padding: 1.5rem;
             }
             .loading-spinner {
-                animation: spin 1s linear infinite;
+                animation: spin 1.5s linear infinite;
             }
             @keyframes spin {
                 from { transform: rotate(0deg); }
                 to { transform: rotate(360deg); }
             }
+            .section-fade-in {
+                opacity: 0;
+                transform: translateY(20px);
+                transition: opacity 0.8s ease, transform 0.8s ease;
+            }
+            .section-visible {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            /* 按钮动画效果 */
+            .btn-primary {
+                position: relative;
+                overflow: hidden;
+                z-index: 1;
+                transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            }
+            .btn-primary::after {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 0;
+                height: 100%;
+                background-color: white;
+                z-index: -1;
+                transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            }
+            .btn-primary:hover {
+                color: #1a1a1a;
+                transform: translateY(-2px);
+                box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            }
+            .btn-primary:hover::after {
+                width: 100%;
+            }
         }
     </style>
 </head>
-<body class="bg-gray-50 text-gray-800">
+<body class="bg-light text-primary antialiased">
     <!-- 导航栏 -->
-    <header class="bg-white shadow-sm sticky top-0 z-50">
-        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
-            <h1 class="text-2xl font-bold text-primary">
-                <i class="fa fa-camera-retro mr-2"></i>我的影像集
+    <header class="fixed top-0 left-0 right-0 bg-light/90 backdrop-blur-sm z-50 transition-all duration-300">
+        <div class="container mx-auto px-6 py-6 flex justify-between items-center">
+            <h1 class="text-xl md:text-2xl font-display font-light tracking-wide">
+                <span class="text-primary">光影</span><span class="text-accent">.</span>
             </h1>
-            <nav>
-                <ul class="flex space-x-6">
-                    <li><a href="#photos" class="hover:text-primary transition-colors"><i class="fa fa-picture-o mr-1"></i>照片</a></li>
-                    <li><a href="#videos" class="hover:text-primary transition-colors"><i class="fa fa-video-camera mr-1"></i>视频</a></li>
-                    <li><a href="#about" class="hover:text-primary transition-colors"><i class="fa fa-user mr-1"></i>关于</a></li>
+            <nav class="hidden md:block">
+                <ul class="flex space-x-8">
+                    <li><a href="#photos" class="text-sm uppercase tracking-wider hover:text-accent transition-colors">照片</a></li>
+                    <li><a href="#videos" class="text-sm uppercase tracking-wider hover:text-accent transition-colors">视频</a></li>
+                    <li><a href="#about" class="text-sm uppercase tracking-wider hover:text-accent transition-colors">关于</a></li>
+                    <li><a href="#contact" class="text-sm uppercase tracking-wider hover:text-accent transition-colors">联系</a></li>
                 </ul>
             </nav>
+            <button class="md:hidden text-primary focus:outline-none" id="menu-toggle">
+                <i class="fa fa-bars text-xl"></i>
+            </button>
+        </div>
+        
+        <!-- 移动端菜单 -->
+        <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-gray-100">
+            <div class="container mx-auto px-6 py-4">
+                <ul class="space-y-4">
+                    <li><a href="#photos" class="block py-2 text-sm uppercase tracking-wider hover:text-accent transition-colors">照片</a></li>
+                    <li><a href="#videos" class="block py-2 text-sm uppercase tracking-wider hover:text-accent transition-colors">视频</a></li>
+                    <li><a href="#about" class="block py-2 text-sm uppercase tracking-wider hover:text-accent transition-colors">关于</a></li>
+                    <li><a href="#contact" class="block py-2 text-sm uppercase tracking-wider hover:text-accent transition-colors">联系</a></li>
+                </ul>
+            </div>
         </div>
     </header>
 
-    <!-- 英雄区域 -->
-    <section class="relative h-[60vh] overflow-hidden">
-        <div class="absolute inset-0 bg-gradient-to-r from-dark/70 to-dark/40 z-10"></div>
-        <img src="https://picsum.photos/id/1015/1920/1080" alt="风景照片展示" class="absolute w-full h-full object-cover">
-        <div class="container mx-auto px-4 h-full flex items-center relative z-20">
-            <div class="text-white max-w-2xl">
-                <h2 class="text-4xl md:text-5xl font-bold mb-4">捕捉生活中的美好瞬间</h2>
-                <p class="text-xl opacity-90 mb-8">自动展示我最新的照片和视频作品</p>
-                <a href="#photos" class="bg-primary hover:bg-primary/90 text-white font-medium py-3 px-6 rounded-lg transition-colors inline-flex items-center">
-                    浏览作品集 <i class="fa fa-arrow-right ml-2"></i>
+    <!-- 英雄区域 - 延时摄影 -->
+    <section class="relative h-screen overflow-hidden">
+        <div class="absolute inset-0 bg-black/30 z-10"></div>
+        
+        <!-- 延时摄影视频 -->
+        <div class="absolute inset-0">
+            <video autoplay loop muted playsinline class="w-full h-full object-cover">
+                <source src="https://assets.mixkit.co/videos/preview/mixkit-time-lapse-of-clouds-over-a-mountain-range-4075-large.mp4" type="video/mp4">
+                <!-- 视频加载失败时显示的备用图片 -->
+                <img src="https://picsum.photos/id/1015/1920/1080" alt="延时摄影展示" class="w-full h-full object-cover">
+            </video>
+        </div>
+        
+        <div class="container mx-auto px-6 h-full flex items-center relative z-20">
+            <div class="max-w-2xl text-white">
+                <h2 class="text-3xl md:text-5xl lg:text-6xl font-display font-light mb-6 leading-tight">
+                    捕捉光影<br>定格瞬间
+                </h2>
+                <p class="text-lg md:text-xl opacity-90 mb-8 max-w-lg font-light">
+                    用镜头讲述故事，每一段影像都是时间的诗篇
+                </p>
+                <!-- 改进的按钮，带有悬停动画 -->
+                <a href="#photos" class="btn-primary inline-block border border-white text-white px-8 py-3 text-sm uppercase tracking-wider relative">
+                    浏览作品集
                 </a>
             </div>
+        </div>
+        <div class="absolute bottom-10 left-1/2 transform -translate-x-1/2 z-20 text-white animate-bounce">
+            <a href="#photos" aria-label="向下滚动"><i class="fa fa-chevron-down"></i></a>
         </div>
     </section>
 
     <!-- 照片展示区 -->
-    <section id="photos" class="py-16 bg-white">
-        <div class="container mx-auto px-4">
-            <div class="text-center mb-12">
-                <h2 class="text-3xl font-bold mb-4">照片集</h2>
-                <p class="text-gray-600 max-w-2xl mx-auto">自动展示仓库中最新的照片，上传新照片后将自动显示</p>
+    <section id="photos" class="py-24 bg-white section-fade-in">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-4xl font-display font-light mb-4">摄影作品</h2>
+                <div class="w-20 h-px bg-accent mx-auto mb-6"></div>
+                <p class="text-secondary max-w-2xl mx-auto">精选摄影作品，记录生活中的美好瞬间</p>
                 
                 <!-- 加载指示器 -->
-                <div id="photos-loading" class="mt-8 flex justify-center items-center">
-                    <i class="fa fa-circle-o-notch fa-spin text-2xl text-primary loading-spinner"></i>
-                    <span class="ml-2 text-gray-600">正在加载照片...</span>
+                <div id="photos-loading" class="mt-12 flex justify-center items-center">
+                    <i class="fa fa-circle-o-notch fa-spin text-xl text-secondary loading-spinner"></i>
                 </div>
             </div>
             
@@ -105,24 +208,24 @@
             </div>
             
             <!-- 错误信息 -->
-            <div id="photos-error" class="hidden text-center py-12 text-red-500">
-                <i class="fa fa-exclamation-triangle text-2xl mb-2"></i>
-                <p>无法加载照片，请稍后再试</p>
+            <div id="photos-error" class="hidden text-center py-24 text-secondary">
+                <i class="fa fa-exclamation-circle text-3xl mb-4"></i>
+                <p>无法加载作品，请稍后再试</p>
             </div>
         </div>
     </section>
 
     <!-- 视频展示区 -->
-    <section id="videos" class="py-16 bg-gray-50">
-        <div class="container mx-auto px-4">
-            <div class="text-center mb-12">
-                <h2 class="text-3xl font-bold mb-4">视频集</h2>
-                <p class="text-gray-600 max-w-2xl mx-auto">自动展示仓库中最新的视频，上传新视频后将自动显示</p>
+    <section id="videos" class="py-24 bg-light section-fade-in">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-4xl font-display font-light mb-4">视频作品</h2>
+                <div class="w-20 h-px bg-accent mx-auto mb-6"></div>
+                <p class="text-secondary max-w-2xl mx-auto">延时摄影与动态影像，捕捉时间的流动</p>
                 
                 <!-- 加载指示器 -->
-                <div id="videos-loading" class="mt-8 flex justify-center items-center">
-                    <i class="fa fa-circle-o-notch fa-spin text-2xl text-primary loading-spinner"></i>
-                    <span class="ml-2 text-gray-600">正在加载视频...</span>
+                <div id="videos-loading" class="mt-12 flex justify-center items-center">
+                    <i class="fa fa-circle-o-notch fa-spin text-xl text-secondary loading-spinner"></i>
                 </div>
             </div>
             
@@ -132,63 +235,106 @@
             </div>
             
             <!-- 错误信息 -->
-            <div id="videos-error" class="hidden text-center py-12 text-red-500">
-                <i class="fa fa-exclamation-triangle text-2xl mb-2"></i>
+            <div id="videos-error" class="hidden text-center py-24 text-secondary">
+                <i class="fa fa-exclamation-circle text-3xl mb-4"></i>
                 <p>无法加载视频，请稍后再试</p>
             </div>
         </div>
     </section>
 
     <!-- 关于区域 -->
-    <section id="about" class="py-16 bg-white">
-        <div class="container mx-auto px-4 max-w-4xl">
-            <div class="text-center mb-12">
-                <h2 class="text-3xl font-bold mb-4">关于这个影像集</h2>
+    <section id="about" class="py-24 bg-white section-fade-in">
+        <div class="container mx-auto px-6 max-w-6xl">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+                <div>
+                    <img src="https://picsum.photos/id/1074/800/1000" alt="摄影师肖像" class="w-full h-auto object-cover rounded-sm shadow-lg">
+                </div>
+                <div>
+                    <h2 class="text-3xl md:text-4xl font-display font-light mb-4">关于摄影师</h2>
+                    <div class="w-20 h-px bg-accent mb-6"></div>
+                    <p class="text-secondary mb-6 leading-relaxed">
+                        专注于人文与自然摄影二十余年，相信每一张照片都有自己的灵魂与故事。透过镜头，观察世界的细微之处，捕捉那些稍纵即逝的光影瞬间。
+                    </p>
+                    <p class="text-secondary mb-8 leading-relaxed">
+                        作品曾在多个国际摄影展中展出，致力于用最简约的方式呈现最丰富的情感，让观者在静默中感受影像的力量。
+                    </p>
+                    <a href="#contact" class="btn-primary inline-block border border-primary text-primary px-8 py-3 text-sm uppercase tracking-wider relative">
+                        联系我
+                    </a>
+                </div>
             </div>
-            <div class="prose lg:prose-xl mx-auto">
-                <p>这是一个自动更新的影像展示网站，所有内容都存储在GitHub仓库中。</p>
-                <p>使用方法：</p>
-                <ol>
-                    <li>将照片上传到仓库的 <code>photos</code> 文件夹</li>
-                    <li>将视频上传到仓库的 <code>videos</code> 文件夹</li>
-                    <li>网站会自动检测并展示新添加的媒体文件</li>
-                    <li>如果需要添加描述，可以创建一个与媒体文件同名的 <code>.txt</code> 文件，内容即为描述</li>
-                </ol>
-                <p>支持的图片格式：JPG、PNG、GIF、WebP</p>
-                <p>支持的视频格式：MP4、WebM</p>
+        </div>
+    </section>
+
+    <!-- 联系区域 -->
+    <section id="contact" class="py-24 bg-light section-fade-in">
+        <div class="container mx-auto px-6 max-w-4xl">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-4xl font-display font-light mb-4">联系我</h2>
+                <div class="w-20 h-px bg-accent mx-auto mb-6"></div>
+                <p class="text-secondary max-w-2xl mx-auto">对作品有任何疑问或合作意向，欢迎随时联系</p>
+            </div>
+            
+            <div class="flex flex-col md:flex-row justify-center gap-12">
+                <div class="text-center md:text-left">
+                    <p class="mb-4"><i class="fa fa-envelope-o text-accent mr-3"></i>contact@photography.com</p>
+                    <p class="mb-4"><i class="fa fa-phone text-accent mr-3"></i>+86 123 4567 8910</p>
+                    <div class="flex justify-center md:justify-start space-x-6 mt-8">
+                        <a href="#" class="text-secondary hover:text-accent transition-colors"><i class="fa fa-instagram text-xl"></i></a>
+                        <a href="#" class="text-secondary hover:text-accent transition-colors"><i class="fa fa-twitter text-xl"></i></a>
+                        <a href="#" class="text-secondary hover:text-accent transition-colors"><i class="fa fa-flickr text-xl"></i></a>
+                        <a href="#" class="text-secondary hover:text-accent transition-colors"><i class="fa fa-behance text-xl"></i></a>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
 
     <!-- 灯箱模态框 -->
-    <div id="lightbox" class="fixed inset-0 bg-black/90 z-50 hidden items-center justify-center p-4">
-        <button id="close-lightbox" class="absolute top-4 right-4 text-white text-3xl hover:text-gray-300">
+    <div id="lightbox" class="fixed inset-0 bg-black/95 z-50 hidden items-center justify-center p-4">
+        <button id="close-lightbox" class="absolute top-8 right-8 text-white text-2xl hover:text-accent transition-colors z-10">
             <i class="fa fa-times"></i>
         </button>
-        <div id="lightbox-content" class="max-w-5xl w-full max-h-[80vh]">
+        <button id="prev-lightbox" class="absolute left-8 top-1/2 transform -translate-y-1/2 text-white text-4xl hover:text-accent transition-colors z-10">
+            <i class="fa fa-chevron-left"></i>
+        </button>
+        <button id="next-lightbox" class="absolute right-8 top-1/2 transform -translate-y-1/2 text-white text-4xl hover:text-accent transition-colors z-10">
+            <i class="fa fa-chevron-right"></i>
+        </button>
+        <div id="lightbox-content" class="max-w-6xl w-full max-h-[90vh]">
             <!-- 内容将动态加载 -->
         </div>
-        <div id="lightbox-caption" class="absolute bottom-8 left-0 right-0 text-center text-white text-lg">
+        <div id="lightbox-caption" class="absolute bottom-12 left-0 right-0 text-center text-white text-lg max-w-3xl mx-auto px-4">
             <!-- 标题将动态加载 -->
         </div>
     </div>
 
     <!-- 页脚 -->
-    <footer class="bg-dark text-white py-8">
-        <div class="container mx-auto px-4 text-center">
-            <p>&copy; 2024 我的影像集 | 自动更新自GitHub仓库</p>
+    <footer class="bg-primary text-white py-12">
+        <div class="container mx-auto px-6">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="mb-6 md:mb-0">
+                    <h2 class="text-xl font-display font-light tracking-wide">
+                        <span class="text-white">光影</span><span class="text-accent">.</span>
+                    </h2>
+                    <p class="text-gray-400 text-sm mt-2">© 2024 摄影作品集. 保留所有权利.</p>
+                </div>
+                <div class="text-gray-400 text-sm">
+                    用镜头讲述生活的故事
+                </div>
+            </div>
         </div>
     </footer>
 
     <script>
         // 配置 - 请修改为你的GitHub用户名和仓库名
-        const GITHUB_USER = 'JASON-SHEN-0225';
-        const REPO_NAME = 'JASON-SHEN-0225.github.io';
+        const GITHUB_USER = 'your-github-username';
+        const REPO_NAME = 'your-repo-name';
         const BRANCH = 'main'; // 通常是main或master
         
-        // 支持的媒体文件格式
+        // 支持的媒体格式
         const IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
-        const VIDEO_EXTENSIONS = ['mp4', 'webm'];
+        const VIDEO_EXTENSIONS = ['mp4', 'webm', 'mov'];
         
         // DOM元素
         const photosContainer = document.getElementById('photos-container');
@@ -201,52 +347,146 @@
         const lightboxContent = document.getElementById('lightbox-content');
         const lightboxCaption = document.getElementById('lightbox-caption');
         const closeLightbox = document.getElementById('close-lightbox');
+        const prevLightbox = document.getElementById('prev-lightbox');
+        const nextLightbox = document.getElementById('next-lightbox');
+        const menuToggle = document.getElementById('menu-toggle');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const sections = document.querySelectorAll('.section-fade-in');
+        
+        // 存储加载的媒体数据
+        let allMedia = {
+            photos: [],
+            videos: []
+        };
+        let currentMediaType = 'photos';
+        let currentMediaIndex = 0;
         
         // 初始化页面
         document.addEventListener('DOMContentLoaded', () => {
-            loadMedia('photos', photosContainer, photosLoading, photosError);
-            loadMedia('videos', videosContainer, videosLoading, videosError);
+            loadMedia('photos');
+            loadMedia('videos');
+            setupScrollAnimation();
+            
+            // 移动端菜单切换
+            menuToggle.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+            
+            // 点击移动菜单项后关闭菜单
+            document.querySelectorAll('#mobile-menu a').forEach(link => {
+                link.addEventListener('click', () => {
+                    mobileMenu.classList.add('hidden');
+                });
+            });
             
             // 灯箱关闭事件
-            closeLightbox.addEventListener('click', () => {
-                lightbox.classList.add('hidden');
-                lightbox.classList.remove('flex');
-                lightboxContent.innerHTML = '';
-                lightboxCaption.textContent = '';
-                document.body.style.overflow = 'auto';
-            });
+            closeLightbox.addEventListener('click', closeLightboxHandler);
+            
+            // 灯箱导航
+            prevLightbox.addEventListener('click', showPrevMedia);
+            nextLightbox.addEventListener('click', showNextMedia);
             
             // 点击灯箱背景关闭
             lightbox.addEventListener('click', (e) => {
                 if (e.target === lightbox) {
-                    closeLightbox.click();
+                    closeLightboxHandler();
                 }
             });
             
-            // 键盘ESC关闭灯箱
+            // 键盘导航
             document.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape' && !lightbox.classList.contains('hidden')) {
-                    closeLightbox.click();
+                if (lightbox.classList.contains('hidden')) return;
+                
+                if (e.key === 'Escape') closeLightboxHandler();
+                if (e.key === 'ArrowLeft') showPrevMedia();
+                if (e.key === 'ArrowRight') showNextMedia();
+            });
+            
+            // 滚动时改变导航栏样式
+            window.addEventListener('scroll', () => {
+                const header = document.querySelector('header');
+                if (window.scrollY > 50) {
+                    header.classList.add('py-4', 'shadow-sm');
+                    header.classList.remove('py-6');
+                } else {
+                    header.classList.add('py-6');
+                    header.classList.remove('py-4', 'shadow-sm');
                 }
+            });
+            
+            // 平滑滚动 - 所有锚点链接
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const targetId = this.getAttribute('href');
+                    const targetElement = document.querySelector(targetId);
+                    
+                    if (targetElement) {
+                        // 平滑滚动到目标位置
+                        window.scrollTo({
+                            top: targetElement.offsetTop - 80,
+                            behavior: 'smooth'
+                        });
+                        
+                        // 滚动时为目标区域添加动画
+                        setTimeout(() => {
+                            targetElement.classList.add('section-visible');
+                        }, 100);
+                    }
+                });
             });
         });
         
         /**
-         * 加载媒体文件并显示
-         * @param {string} folder 文件夹名称 (photos 或 videos)
-         * @param {HTMLElement} container 容器元素
-         * @param {HTMLElement} loadingEl 加载指示器
-         * @param {HTMLElement} errorEl 错误信息元素
+         * 设置滚动动画监听
          */
-        async function loadMedia(folder, container, loadingEl, errorEl) {
+        function setupScrollAnimation() {
+            // 初始检查可见区域
+            checkVisibility();
+            
+            // 滚动时检查可见区域
+            window.addEventListener('scroll', checkVisibility);
+        }
+        
+        /**
+         * 检查元素是否在可视区域内
+         */
+        function checkVisibility() {
+            const windowHeight = window.innerHeight;
+            
+            // 检查区域淡入动画
+            sections.forEach(section => {
+                const sectionTop = section.getBoundingClientRect().top;
+                if (sectionTop < windowHeight * 0.85) {
+                    section.classList.add('section-visible');
+                }
+            });
+            
+            // 检查媒体项淡入动画
+            document.querySelectorAll('.media-item:not(.visible)').forEach((item, index) => {
+                const itemTop = item.getBoundingClientRect().top;
+                if (itemTop < windowHeight * 0.9) {
+                    // 错开动画时间，创建流畅的序列效果
+                    setTimeout(() => {
+                        item.classList.add('visible');
+                    }, index * 50);
+                }
+            });
+        }
+        
+        /**
+         * 加载媒体文件并显示
+         * @param {string} type 类型 (photos 或 videos)
+         */
+        async function loadMedia(type) {
             try {
                 // 获取文件夹中的文件列表
-                const files = await fetchGitHubFiles(folder);
+                const files = await fetchGitHubFiles(type);
                 
                 // 筛选媒体文件
                 const mediaFiles = files.filter(file => {
                     const ext = file.name.split('.').pop().toLowerCase();
-                    return folder === 'photos' 
+                    return type === 'photos' 
                         ? IMAGE_EXTENSIONS.includes(ext)
                         : VIDEO_EXTENSIONS.includes(ext);
                 });
@@ -254,86 +494,84 @@
                 // 按最后修改时间排序（最新的在前）
                 mediaFiles.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
                 
+                // 保存到全局变量
+                allMedia[type] = mediaFiles;
+                
+                // 获取对应的容器
+                const container = type === 'photos' ? photosContainer : videosContainer;
+                const loadingEl = type === 'photos' ? photosLoading : videosLoading;
+                
                 // 清空容器
                 container.innerHTML = '';
                 
                 // 如果没有文件
                 if (mediaFiles.length === 0) {
                     container.innerHTML = `
-                        <div class="col-span-full text-center py-16 text-gray-500">
-                            <i class="fa fa-folder-open text-4xl mb-4"></i>
-                            <p>该文件夹中暂无${folder === 'photos' ? '照片' : '视频'}</p>
+                        <div class="col-span-full text-center py-24 text-secondary">
+                            <i class="fa fa-${type === 'photos' ? 'image' : 'video-camera'} text-5xl mb-6 opacity-30"></i>
+                            <p>暂无${type === 'photos' ? '摄影' : '视频'}作品</p>
                         </div>
                     `;
                     loadingEl.classList.add('hidden');
                     return;
                 }
                 
-                // 为每个媒体文件创建卡片
-                for (const file of mediaFiles) {
+                // 为每个媒体文件创建项目
+                mediaFiles.forEach((file, index) => {
                     const fileName = file.name;
-                    const fileUrl = `https://raw.githubusercontent.com/${GITHUB_USER}/${REPO_NAME}/${BRANCH}/${folder}/${fileName}`;
+                    const fileUrl = `https://raw.githubusercontent.com/${GITHUB_USER}/${REPO_NAME}/${BRANCH}/${type}/${fileName}`;
                     const baseName = fileName.substring(0, fileName.lastIndexOf('.'));
                     
-                    // 尝试获取描述文件
-                    let description = '';
-                    try {
-                        const descUrl = `https://raw.githubusercontent.com/${GITHUB_USER}/${REPO_NAME}/${BRANCH}/${folder}/${baseName}.txt`;
-                        const response = await fetch(descUrl);
-                        if (response.ok) {
-                            description = await response.text();
-                        }
-                    } catch (e) {
-                        // 没有描述文件也没关系
-                        console.log(`No description file for ${fileName}`);
-                    }
+                    // 创建媒体项
+                    const mediaItem = document.createElement('div');
+                    mediaItem.className = 'media-item';
                     
-                    // 创建卡片
-                    const card = document.createElement('div');
-                    card.className = 'media-card bg-white rounded-xl overflow-hidden shadow-md';
-                    
-                    // 根据类型创建媒体元素
-                    if (folder === 'photos') {
-                        card.innerHTML = `
-                            <div class="relative aspect-[4/3] overflow-hidden">
-                                <img src="${fileUrl}" alt="${baseName}" class="w-full h-full object-cover">
-                                <button class="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center text-white" 
-                                        onclick="openLightbox('${fileUrl}', '${escapeHtml(baseName)}', 'image')">
-                                    <i class="fa fa-search-plus text-3xl"></i>
-                                </button>
-                            </div>
-                            <div class="p-4">
-                                <h3 class="font-semibold text-lg mb-1">${escapeHtml(baseName)}</h3>
-                                <p class="text-gray-600 text-sm">${escapeHtml(description || '无描述')}</p>
+                    // 根据类型创建不同的媒体元素
+                    if (type === 'photos') {
+                        mediaItem.innerHTML = `
+                            <div class="media-container">
+                                <img src="${fileUrl}" alt="${baseName}" class="w-full h-auto transition-transform duration-700 ease-out">
+                                <div class="media-overlay">
+                                    <h3 class="text-white font-medium text-lg">${escapeHtml(baseName)}</h3>
+                                </div>
                             </div>
                         `;
                     } else {
-                        card.innerHTML = `
-                            <div class="relative aspect-[16/9] overflow-hidden bg-gray-100">
-                                <video poster="https://picsum.photos/800/450?random=${Math.random()}" class="w-full h-full object-cover">
+                        mediaItem.innerHTML = `
+                            <div class="media-container">
+                                <video poster="https://picsum.photos/800/600?random=${Math.random()}" class="w-full h-auto transition-transform duration-700 ease-out">
                                     <source src="${fileUrl}" type="video/${fileName.split('.').pop()}">
-                                    您的浏览器不支持视频播放
                                 </video>
-                                <button class="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center text-white" 
-                                        onclick="openLightbox('${fileUrl}', '${escapeHtml(baseName)}', 'video')">
-                                    <i class="fa fa-play-circle text-5xl"></i>
-                                </button>
-                            </div>
-                            <div class="p-4">
-                                <h3 class="font-semibold text-lg mb-1">${escapeHtml(baseName)}</h3>
-                                <p class="text-gray-600 text-sm">${escapeHtml(description || '无描述')}</p>
+                                <div class="media-overlay flex items-end">
+                                    <div>
+                                        <h3 class="text-white font-medium text-lg">${escapeHtml(baseName)}</h3>
+                                        <div class="mt-2 bg-accent/80 w-10 h-10 rounded-full flex items-center justify-center">
+                                            <i class="fa fa-play text-white"></i>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         `;
                     }
                     
-                    container.appendChild(card);
-                }
+                    // 点击打开灯箱
+                    mediaItem.addEventListener('click', () => {
+                        openLightbox(type, index);
+                    });
+                    
+                    container.appendChild(mediaItem);
+                });
                 
                 // 隐藏加载指示器
                 loadingEl.classList.add('hidden');
                 
+                // 检查可见性以触发初始动画
+                setTimeout(checkVisibility, 100);
+                
             } catch (error) {
-                console.error(`Error loading ${folder}:`, error);
+                console.error(`Error loading ${type}:`, error);
+                const loadingEl = type === 'photos' ? photosLoading : videosLoading;
+                const errorEl = type === 'photos' ? photosError : videosError;
                 loadingEl.classList.add('hidden');
                 errorEl.classList.remove('hidden');
             }
@@ -358,28 +596,75 @@
         
         /**
          * 打开灯箱显示媒体
-         * @param {string} url 媒体URL
-         * @param {string} caption 标题/描述
-         * @param {string} type 类型: image 或 video
+         * @param {string} type 媒体类型 (photos 或 videos)
+         * @param {number} index 媒体索引
          */
-        function openLightbox(url, caption, type) {
-            lightbox.classList.remove('hidden');
-            lightbox.classList.add('flex');
-            lightboxCaption.textContent = caption;
-            document.body.style.overflow = 'hidden';
+        function openLightbox(type, index) {
+            const mediaList = allMedia[type];
+            if (!mediaList || mediaList.length === 0) return;
             
-            if (type === 'image') {
-                lightboxContent.innerHTML = `<img src="${url}" alt="${caption}" class="max-w-full max-h-[80vh] object-contain">`;
+            currentMediaType = type;
+            currentMediaIndex = index;
+            
+            const media = mediaList[index];
+            const fileName = media.name;
+            const fileUrl = `https://raw.githubusercontent.com/${GITHUB_USER}/${REPO_NAME}/${BRANCH}/${type}/${fileName}`;
+            const baseName = fileName.substring(0, fileName.lastIndexOf('.'));
+            
+            // 更新灯箱内容
+            if (type === 'photos') {
+                lightboxContent.innerHTML = `<img src="${fileUrl}" alt="${baseName}" class="max-w-full max-h-[90vh] object-contain mx-auto">`;
             } else {
                 lightboxContent.innerHTML = `
-                    <video controls class="max-w-full max-h-[80vh] object-contain">
-                        <source src="${url}" type="video/${url.split('.').pop()}">
+                    <video controls class="max-w-full max-h-[90vh] object-contain mx-auto">
+                        <source src="${fileUrl}" type="video/${fileName.split('.').pop()}">
                         您的浏览器不支持视频播放
                     </video>
                 `;
                 // 自动播放视频
-                lightboxContent.querySelector('video').play();
+                setTimeout(() => {
+                    const video = lightboxContent.querySelector('video');
+                    if (video) video.play();
+                }, 100);
             }
+            
+            lightboxCaption.textContent = baseName;
+            
+            // 显示灯箱
+            lightbox.classList.remove('hidden');
+            lightbox.classList.add('flex');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        /**
+         * 关闭灯箱
+         */
+        function closeLightboxHandler() {
+            // 暂停视频播放
+            const video = lightboxContent.querySelector('video');
+            if (video) video.pause();
+            
+            lightbox.classList.add('hidden');
+            lightbox.classList.remove('flex');
+            document.body.style.overflow = 'auto';
+        }
+        
+        /**
+         * 显示上一个媒体
+         */
+        function showPrevMedia() {
+            const mediaList = allMedia[currentMediaType];
+            currentMediaIndex = (currentMediaIndex - 1 + mediaList.length) % mediaList.length;
+            openLightbox(currentMediaType, currentMediaIndex);
+        }
+        
+        /**
+         * 显示下一个媒体
+         */
+        function showNextMedia() {
+            const mediaList = allMedia[currentMediaType];
+            currentMediaIndex = (currentMediaIndex + 1) % mediaList.length;
+            openLightbox(currentMediaType, currentMediaIndex);
         }
         
         /**
