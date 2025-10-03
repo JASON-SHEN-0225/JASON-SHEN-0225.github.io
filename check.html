@@ -14,13 +14,13 @@
             theme: {
                 extend: {
                     colors: {
-                        primary: '#1a1a1a',
-                        secondary: '#666666',
-                        accent: '#d4af37',
+                        primary: 'var(--color-primary)',
+                        secondary: 'var(--color-secondary)',
+                        accent: 'var(--color-accent)',
                         success: '#4CAF50',
                         danger: '#f44336',
-                        light: '#f8f8f8',
-                        dark: '#0f0f0f'
+                        light: 'var(--color-bg-light)',
+                        dark: 'var(--color-bg-dark)'
                     },
                     fontFamily: {
                         sans: ['Inter', 'Helvetica', 'Arial', 'sans-serif']
@@ -54,6 +54,88 @@
                 from { opacity: 0; transform: translateY(10px); }
                 to { opacity: 1; transform: translateY(0); }
             }
+            /* 黑夜模式切换开关（带太阳月亮图标） */
+            .theme-toggle {
+                position: relative;
+                width: 56px;
+                height: 26px;
+                margin-left: 1rem;
+            }
+            .theme-toggle input {
+                opacity: 0;
+                width: 0;
+                height: 0;
+            }
+            .theme-slider {
+                position: absolute;
+                cursor: pointer;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-color: var(--color-secondary);
+                transition: 0.4s;
+                border-radius: 24px;
+            }
+            .theme-slider:before {
+                position: absolute;
+                content: "";
+                height: 18px;
+                width: 18px;
+                left: 4px;
+                bottom: 4px;
+                background-color: white;
+                transition: 0.4s;
+                border-radius: 50%;
+            }
+            input:checked + .theme-slider {
+                background-color: var(--color-accent);
+            }
+            input:checked + .theme-slider:before {
+                transform: translateX(30px);
+            }
+            /* 太阳月亮图标 */
+            .theme-icon {
+                position: absolute;
+                z-index: 1;
+                top: 50%;
+                transform: translateY(-50%);
+                font-size: 12px;
+                color: white;
+            }
+            .sun-icon {
+                left: 8px;
+            }
+            .moon-icon {
+                right: 8px;
+            }
+        }
+    </style>
+    
+    <!-- CSS变量定义（与主站保持一致） -->
+    <style>
+        :root {
+            /* 白天模式 */
+            --color-primary: #1a1a1a;
+            --color-secondary: #666666;
+            --color-accent: #d4af37;
+            --color-bg-light: #f8f8f8;
+            --color-bg-white: #ffffff;
+            --color-bg-dark: #0f0f0f;
+        }
+        
+        /* 黑夜模式 */
+        .dark {
+            --color-primary: #f5f5f5;
+            --color-secondary: #bbbbbb;
+            --color-accent: #f0d779;
+            --color-bg-light: #121212;
+            --color-bg-white: #1e1e1e;
+        }
+        
+        /* 平滑过渡 */
+        body, header, .bg-white, .border-gray-200 {
+            transition: background-color 0.5s ease, color 0.5s ease, border-color 0.5s ease;
         }
     </style>
 </head>
@@ -65,9 +147,17 @@
                 <span class="text-primary">光影</span><span class="text-accent">.</span>
                 <span class="text-sm text-secondary ml-2">资源状态检查</span>
             </h1>
-            <a href="index.html" class="text-sm text-secondary hover:text-accent transition-colors flex items-center">
-                <i class="fa fa-arrow-left mr-1"></i> 返回主页
-            </a>
+            <div class="flex items-center">
+                <label class="theme-toggle">
+                    <i class="theme-icon sun-icon fa fa-sun-o"></i>
+                    <i class="theme-icon moon-icon fa fa-moon-o"></i>
+                    <input type="checkbox" id="theme-switch">
+                    <span class="theme-slider"></span>
+                </label>
+                <a href="index.html" class="text-sm text-secondary hover:text-accent transition-colors flex items-center ml-4">
+                    <i class="fa fa-arrow-left mr-1"></i> 返回主页
+                </a>
+            </div>
         </div>
     </header>
 
@@ -130,7 +220,7 @@
     </footer>
 
     <script>
-        // 需要检查的资源列表 - 根据原代码中的外链整理
+        // 需要检查的资源列表
         const resourcesToCheck = [
             // 英雄区域视频
             { url: 'https://cdn.pixabay.com/video/2018/03/21/15138-261402905_large.mp4', type: 'video', name: '英雄区域延时视频' },
@@ -139,10 +229,10 @@
             // 关于页面图片
             { url: 'https://www.2008php.com/2019_Website_appreciate/2019-04-08/20190408225002qER57qER57.jpg', type: 'image', name: '摄影师肖像' },
             
-            // GitHub图片资源示例（实际会动态检查）
+            // GitHub图片资源示例
             { url: 'https://raw.githubusercontent.com/JASON-SHEN-0225/JASON-SHEN-0225.github.io/main/photos/', type: 'image', name: '摄影作品文件夹' },
             
-            // GitHub视频资源示例（实际会动态检查）
+            // GitHub视频资源示例
             { url: 'https://raw.githubusercontent.com/JASON-SHEN-0225/JASON-SHEN-0225.github.io/main/videos/', type: 'video', name: '视频作品文件夹' },
             
             // 视频封面备用图
@@ -160,6 +250,7 @@
         const filterAllBtn = document.getElementById('filter-all');
         const filterSuccessBtn = document.getElementById('filter-success');
         const filterErrorBtn = document.getElementById('filter-error');
+        const themeSwitch = document.getElementById('theme-switch');
 
         // 状态计数
         let stats = {
@@ -170,6 +261,8 @@
 
         // 页面加载完成后检查资源
         document.addEventListener('DOMContentLoaded', () => {
+            // 初始化黑夜模式
+            initDarkMode();
             checkAllResources();
             
             // 事件监听
@@ -177,22 +270,42 @@
             filterAllBtn.addEventListener('click', () => filterResources('all'));
             filterSuccessBtn.addEventListener('click', () => filterResources('success'));
             filterErrorBtn.addEventListener('click', () => filterResources('error'));
+            themeSwitch.addEventListener('change', toggleDarkMode);
         });
+
+        /**
+         * 初始化黑夜模式
+         */
+        function initDarkMode() {
+            const isDarkMode = localStorage.getItem('darkMode') === 'true' || 
+                              (localStorage.getItem('darkMode') === null && 
+                               window.matchMedia('(prefers-color-scheme: dark)').matches);
+            
+            if (isDarkMode) {
+                document.body.classList.add('dark');
+                themeSwitch.checked = true;
+            }
+        }
+        
+        /**
+         * 切换黑夜模式
+         */
+        function toggleDarkMode() {
+            const isDarkMode = !document.body.classList.contains('dark');
+            document.body.classList.toggle('dark', isDarkMode);
+            themeSwitch.checked = isDarkMode;
+            localStorage.setItem('darkMode', isDarkMode);
+        }
 
         // 检查所有资源
         function checkAllResources() {
-            // 重置状态
             stats = { total: resourcesToCheck.length, success: 0, error: 0 };
             resourcesList.innerHTML = '';
             loadingEl.classList.remove('hidden');
             resourcesContainer.classList.add('hidden');
-            
-            // 更新计数显示
             updateStats();
             
-            // 逐个检查资源
             resourcesToCheck.forEach((resource, index) => {
-                // 错开检查时间，避免同时发起太多请求
                 setTimeout(() => {
                     checkResource(resource);
                 }, index * 300);
@@ -201,7 +314,6 @@
 
         // 检查单个资源
         function checkResource(resource) {
-            // 创建资源项元素
             const resourceItem = document.createElement('div');
             resourceItem.className = 'resource-item p-4 border border-gray-200 rounded-lg flex flex-col md:flex-row md:items-center justify-between';
             resourceItem.dataset.status = 'checking';
@@ -225,22 +337,18 @@
             
             resourcesList.appendChild(resourceItem);
 
-            // 检查资源是否可访问
             fetch(resource.url, { method: 'HEAD' })
                 .then(response => {
-                    // HTTP状态码200-299表示成功
                     const isSuccess = response.ok;
                     updateResourceStatus(resourceItem, isSuccess);
                 })
                 .catch(error => {
-                    // 捕获任何错误，视为不可访问
                     updateResourceStatus(resourceItem, false);
                 });
         }
 
         // 更新资源状态显示
         function updateResourceStatus(element, isSuccess) {
-            // 更新计数
             if (isSuccess) {
                 stats.success++;
                 element.dataset.status = 'success';
@@ -279,13 +387,9 @@
                 `;
             }
             
-            // 添加淡入动画
             element.classList.add('fade-in');
-            
-            // 更新统计数据
             updateStats();
             
-            // 所有资源检查完成后隐藏加载状态
             if (stats.success + stats.error === stats.total) {
                 loadingEl.classList.add('hidden');
                 resourcesContainer.classList.remove('hidden');
@@ -303,7 +407,6 @@
         function filterResources(filter) {
             const allItems = document.querySelectorAll('.resource-item');
             
-            // 更新按钮样式
             filterAllBtn.className = 'px-3 py-1 bg-gray-200 text-secondary text-sm rounded hover:bg-accent hover:text-white transition-colors';
             filterSuccessBtn.className = 'px-3 py-1 bg-gray-200 text-secondary text-sm rounded hover:bg-success hover:text-white transition-colors';
             filterErrorBtn.className = 'px-3 py-1 bg-gray-200 text-secondary text-sm rounded hover:bg-danger hover:text-white transition-colors';
