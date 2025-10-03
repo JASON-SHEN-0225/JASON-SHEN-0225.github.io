@@ -551,7 +551,7 @@
                         clearTimeout(totalTimeout);
                         cleanupTempVideo(tempVideo);
                         resolve(fallbackPoster);
-                    }, 7000);
+                    }, 8000);
 
                     // 元数据加载成功
                     tempVideo.addEventListener('loadedmetadata', () => {
@@ -571,7 +571,7 @@
                             clearTimeout(totalTimeout);
                             cleanupTempVideo(tempVideo);
                             resolve(fallbackPoster);
-                        }, 6000);
+                        }, 7000);
 
                         // 尝试跳转到目标帧
                         try {
