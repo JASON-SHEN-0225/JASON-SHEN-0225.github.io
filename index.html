@@ -144,7 +144,7 @@
 <body class="bg-light text-primary antialiased">
     <!-- 导航栏 -->
     <header class="fixed top-0 left-0 right-0 bg-light/90 backdrop-blur-sm z-50 transition-all duration-300">
-        <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-6 w-64 flex justify-between items-center">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-6 flex justify-between items-center">
             <h1 class="text-3xl md:text-4xl font-display font-light tracking-wide">
                 <span class="text-primary">光影</span><span class="text-accent">.</span>
             </h1>
@@ -558,7 +558,7 @@
                         clearTimeout(metadataTimeout);
                         
                         // 避免黑屏帧：取视频20%处或1-3秒内的帧
-                        const safeFrameTime = Math.max(1, Math.min(3, tempVideo.duration * 0.2));
+                        const safeFrameTime = Math.max(1, Math.min(2, tempVideo.duration * 0.2));
                         if (isNaN(tempVideo.duration) || tempVideo.duration <= 0) {
                             clearTimeout(totalTimeout);
                             cleanupTempVideo(tempVideo);
@@ -590,8 +590,8 @@
 
                             try {
                                 const canvas = document.createElement('canvas');
-                                canvas.width = 1280;
-                                canvas.height = 960; // 固定比例避免计算错误
+                                canvas.width = 1920;
+                                canvas.height = 1080; // 固定比例避免计算错误
                                 const ctx = canvas.getContext('2d');
                                 ctx.drawImage(tempVideo, 0, 0, canvas.width, canvas.height);
                                 
