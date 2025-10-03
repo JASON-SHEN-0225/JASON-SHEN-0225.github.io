@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>资源状态检查 | 光影集</title>
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    
+    <!-- 配置Tailwind -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1a1a1a',
+                        secondary: '#666666',
+                        accent: '#d4af37',
+                        success: '#4CAF50',
+                        danger: '#f44336',
+                        light: '#f8f8f8',
+                        dark: '#0f0f0f'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'Helvetica', 'Arial', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .status-indicator {
+                width: 12px;
+                height: 12px;
+                border-radius: 50%;
+                display: inline-block;
+            }
+            .resource-item {
+                transition: all 0.3s ease;
+            }
+            .resource-item:hover {
+                background-color: rgba(212, 175, 55, 0.05);
+            }
+            .fade-in {
+                animation: fadeIn 0.5s ease-in;
+            }
+            @keyframes fadeIn {
+                from { opacity: 0; transform: translateY(10px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+        }
+    </style>
+</head>
+<body class="bg-light text-primary min-h-screen">
+    <!-- 导航栏 -->
+    <header class="bg-white shadow-sm py-4 sticky top-0 z-30">
+        <div class="container mx-auto px-6 flex justify-between items-center">
+            <h1 class="text-xl font-medium">
+                <span class="text-primary">光影</span><span class="text-accent">.</span>
+                <span class="text-sm text-secondary ml-2">资源状态检查</span>
+            </h1>
+            <a href="index.html" class="text-sm text-secondary hover:text-accent transition-colors flex items-center">
+                <i class="fa fa-arrow-left mr-1"></i> 返回主页
+            </a>
+        </div>
+    </header>
+
+    <!-- 主内容区 -->
+    <main class="container mx-auto px-6 py-10">
+        <!-- 总体状态 -->
+        <div class="mb-8 p-6 bg-white rounded-lg shadow-sm">
+            <h2 class="text-xl font-medium mb-4 flex items-center">
+                <i class="fa fa-dashboard text-accent mr-2"></i> 总体状态
+            </h2>
+            <div id="summary" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="p-4 border border-gray-200 rounded-lg">
+                    <p class="text-sm text-secondary">总资源数</p>
+                    <p id="total-count" class="text-2xl font-medium">0</p>
+                </div>
+                <div class="p-4 border border-gray-200 rounded-lg">
+                    <p class="text-sm text-secondary">可访问</p>
+                    <p id="success-count" class="text-2xl font-medium text-success">0</p>
+                </div>
+                <div class="p-4 border border-gray-200 rounded-lg">
+                    <p class="text-sm text-secondary">不可访问</p>
+                    <p id="error-count" class="text-2xl font-medium text-danger">0</p>
+                </div>
+            </div>
+            <div class="mt-6">
+                <button id="refresh-btn" class="px-4 py-2 bg-accent text-white rounded hover:bg-accent/90 transition-colors flex items-center">
+                    <i class="fa fa-refresh mr-2"></i> 重新检查
+                </button>
+            </div>
+        </div>
+
+        <!-- 加载状态 -->
+        <div id="loading" class="mb-8 p-8 text-center">
+            <i class="fa fa-circle-o-notch fa-spin text-3xl text-accent mb-4"></i>
+            <p>正在检查资源可用性...</p>
+        </div>
+
+        <!-- 资源列表 -->
+        <div id="resources-container" class="hidden">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-medium">资源检查结果</h2>
+                <div class="flex space-x-2">
+                    <button id="filter-all" class="px-3 py-1 bg-accent text-white text-sm rounded">全部</button>
+                    <button id="filter-success" class="px-3 py-1 bg-gray-200 text-secondary text-sm rounded hover:bg-success hover:text-white transition-colors">可用</button>
+                    <button id="filter-error" class="px-3 py-1 bg-gray-200 text-secondary text-sm rounded hover:bg-danger hover:text-white transition-colors">不可用</button>
+                </div>
+            </div>
+            
+            <div id="resources-list" class="space-y-3 max-h-[60vh] overflow-y-auto pr-2">
+                <!-- 资源项将动态生成 -->
+            </div>
+        </div>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="bg-primary text-white py-6 mt-12">
+        <div class="container mx-auto px-6 text-center text-sm text-gray-400">
+            © 2025 光影集 | 申家铖摄影作品
+        </div>
+    </footer>
+
+    <script>
+        // 需要检查的资源列表 - 根据原代码中的外链整理
+        const resourcesToCheck = [
+            // 英雄区域视频
+            { url: 'https://cdn.pixabay.com/video/2018/03/21/15138-261402905_large.mp4', type: 'video', name: '英雄区域延时视频' },
+            { url: 'https://www4.bing.com//th?id=OHR.OzoneEarth_ZH-CN0993915980_1920x1080.jpg&rf=LaDigue_1920x1080.jpg&pid=hp', type: 'image', name: '英雄区域备用图片' },
+            
+            // 关于页面图片
+            { url: 'https://www.2008php.com/2019_Website_appreciate/2019-04-08/20190408225002qER57qER57.jpg', type: 'image', name: '摄影师肖像' },
+            
+            // GitHub图片资源示例（实际会动态检查）
+            { url: 'https://raw.githubusercontent.com/JASON-SHEN-0225/JASON-SHEN-0225.github.io/main/photos/', type: 'image', name: '摄影作品文件夹' },
+            
+            // GitHub视频资源示例（实际会动态检查）
+            { url: 'https://raw.githubusercontent.com/JASON-SHEN-0225/JASON-SHEN-0225.github.io/main/videos/', type: 'video', name: '视频作品文件夹' },
+            
+            // 视频封面备用图
+            { url: 'https://picsum.photos/800/600?video-placeholder', type: 'image', name: '视频备用封面' }
+        ];
+
+        // DOM元素
+        const loadingEl = document.getElementById('loading');
+        const resourcesContainer = document.getElementById('resources-container');
+        const resourcesList = document.getElementById('resources-list');
+        const totalCountEl = document.getElementById('total-count');
+        const successCountEl = document.getElementById('success-count');
+        const errorCountEl = document.getElementById('error-count');
+        const refreshBtn = document.getElementById('refresh-btn');
+        const filterAllBtn = document.getElementById('filter-all');
+        const filterSuccessBtn = document.getElementById('filter-success');
+        const filterErrorBtn = document.getElementById('filter-error');
+
+        // 状态计数
+        let stats = {
+            total: 0,
+            success: 0,
+            error: 0
+        };
+
+        // 页面加载完成后检查资源
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAllResources();
+            
+            // 事件监听
+            refreshBtn.addEventListener('click', checkAllResources);
+            filterAllBtn.addEventListener('click', () => filterResources('all'));
+            filterSuccessBtn.addEventListener('click', () => filterResources('success'));
+            filterErrorBtn.addEventListener('click', () => filterResources('error'));
+        });
+
+        // 检查所有资源
+        function checkAllResources() {
+            // 重置状态
+            stats = { total: resourcesToCheck.length, success: 0, error: 0 };
+            resourcesList.innerHTML = '';
+            loadingEl.classList.remove('hidden');
+            resourcesContainer.classList.add('hidden');
+            
+            // 更新计数显示
+            updateStats();
+            
+            // 逐个检查资源
+            resourcesToCheck.forEach((resource, index) => {
+                // 错开检查时间，避免同时发起太多请求
+                setTimeout(() => {
+                    checkResource(resource);
+                }, index * 300);
+            });
+        }
+
+        // 检查单个资源
+        function checkResource(resource) {
+            // 创建资源项元素
+            const resourceItem = document.createElement('div');
+            resourceItem.className = 'resource-item p-4 border border-gray-200 rounded-lg flex flex-col md:flex-row md:items-center justify-between';
+            resourceItem.dataset.status = 'checking';
+            resourceItem.dataset.type = resource.type;
+            
+            resourceItem.innerHTML = `
+                <div class="flex items-start mb-2 md:mb-0">
+                    <div class="mr-3 mt-1">
+                        <i class="fa fa-${resource.type === 'image' ? 'image' : 'video-camera'} text-secondary"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-medium text-sm md:text-base">${resource.name}</h3>
+                        <p class="text-xs md:text-sm text-secondary break-all mt-1">${resource.url}</p>
+                    </div>
+                </div>
+                <div class="flex items-center">
+                    <span class="text-sm mr-2">检查中...</span>
+                    <i class="fa fa-circle-o-notch fa-spin text-secondary"></i>
+                </div>
+            `;
+            
+            resourcesList.appendChild(resourceItem);
+
+            // 检查资源是否可访问
+            fetch(resource.url, { method: 'HEAD' })
+                .then(response => {
+                    // HTTP状态码200-299表示成功
+                    const isSuccess = response.ok;
+                    updateResourceStatus(resourceItem, isSuccess);
+                })
+                .catch(error => {
+                    // 捕获任何错误，视为不可访问
+                    updateResourceStatus(resourceItem, false);
+                });
+        }
+
+        // 更新资源状态显示
+        function updateResourceStatus(element, isSuccess) {
+            // 更新计数
+            if (isSuccess) {
+                stats.success++;
+                element.dataset.status = 'success';
+                element.innerHTML = `
+                    <div class="flex items-start mb-2 md:mb-0">
+                        <div class="mr-3 mt-1">
+                            <i class="fa fa-${element.dataset.type === 'image' ? 'image' : 'video-camera'} text-secondary"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-medium text-sm md:text-base">${element.querySelector('h3').textContent}</h3>
+                            <p class="text-xs md:text-sm text-secondary break-all mt-1">${element.querySelector('p').textContent}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center text-success">
+                        <span class="status-indicator bg-success mr-2"></span>
+                        <span class="text-sm">可访问</span>
+                    </div>
+                `;
+            } else {
+                stats.error++;
+                element.dataset.status = 'error';
+                element.innerHTML = `
+                    <div class="flex items-start mb-2 md:mb-0">
+                        <div class="mr-3 mt-1">
+                            <i class="fa fa-${element.dataset.type === 'image' ? 'image' : 'video-camera'} text-secondary"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-medium text-sm md:text-base">${element.querySelector('h3').textContent}</h3>
+                            <p class="text-xs md:text-sm text-secondary break-all mt-1">${element.querySelector('p').textContent}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center text-danger">
+                        <span class="status-indicator bg-danger mr-2"></span>
+                        <span class="text-sm">不可访问</span>
+                    </div>
+                `;
+            }
+            
+            // 添加淡入动画
+            element.classList.add('fade-in');
+            
+            // 更新统计数据
+            updateStats();
+            
+            // 所有资源检查完成后隐藏加载状态
+            if (stats.success + stats.error === stats.total) {
+                loadingEl.classList.add('hidden');
+                resourcesContainer.classList.remove('hidden');
+            }
+        }
+
+        // 更新统计数据显示
+        function updateStats() {
+            totalCountEl.textContent = stats.total;
+            successCountEl.textContent = stats.success;
+            errorCountEl.textContent = stats.error;
+        }
+
+        // 筛选资源显示
+        function filterResources(filter) {
+            const allItems = document.querySelectorAll('.resource-item');
+            
+            // 更新按钮样式
+            filterAllBtn.className = 'px-3 py-1 bg-gray-200 text-secondary text-sm rounded hover:bg-accent hover:text-white transition-colors';
+            filterSuccessBtn.className = 'px-3 py-1 bg-gray-200 text-secondary text-sm rounded hover:bg-success hover:text-white transition-colors';
+            filterErrorBtn.className = 'px-3 py-1 bg-gray-200 text-secondary text-sm rounded hover:bg-danger hover:text-white transition-colors';
+            
+            if (filter === 'all') {
+                filterAllBtn.className = 'px-3 py-1 bg-accent text-white text-sm rounded';
+                allItems.forEach(item => item.classList.remove('hidden'));
+            } else if (filter === 'success') {
+                filterSuccessBtn.className = 'px-3 py-1 bg-success text-white text-sm rounded';
+                allItems.forEach(item => {
+                    if (item.dataset.status === 'success') {
+                        item.classList.remove('hidden');
+                    } else {
+                        item.classList.add('hidden');
+                    }
+                });
+            } else if (filter === 'error') {
+                filterErrorBtn.className = 'px-3 py-1 bg-danger text-white text-sm rounded';
+                allItems.forEach(item => {
+                    if (item.dataset.status === 'error') {
+                        item.classList.remove('hidden');
+                    } else {
+                        item.classList.add('hidden');
+                    }
+                });
+            }
+        }
+    </script>
+</body>
+</html>
