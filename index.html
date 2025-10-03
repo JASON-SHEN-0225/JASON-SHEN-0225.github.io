@@ -521,7 +521,8 @@
         function getVideoFirstFrame(videoUrl, ext) {
             return new Promise((resolve) => {
                 // 保底备用封面（确保不会空白）
-                const fallbackPoster = `https://picsum.photos/800/600?video-placeholder-${Date.now()}`;
+                const unsplashVideoFallback = `https://source.unsplash.com/random/1920x1080/?,placeholder-${Date.now()}`;
+
                 
                 // 第一步：先预检查视频可用性
                 preCheckVideoAccess(videoUrl).then(isAccessible => {
