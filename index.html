@@ -526,28 +526,33 @@
                     const mediaItem = document.createElement('div');
                     mediaItem.className = 'media-item';
 
-                    // 首先添加一个获取必应随机图片的函数
-async function getBingRandomImageUrl() {
+ // 修改图片获取函数，解决跨域问题
+async function getRandomImageUrl() {
     try {
-        // 必应图片API，获取随机图片
-        const response = await fetch('https://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1&mkt=zh-CN');
+        // 方案1：使用支持CORS的Unsplash随机图片（推荐）
+        // 每次刷新会自动生成不同图片
+        const unsplashUrl = `https://source.unsplash.com/random/800x600?sig=${Math.random()}`;
+        return unsplashUrl;
+
+        // 方案2：必应API（需配合后端代理，否则仍会跨域）
+        // 若有后端服务，可通过代理转发请求（示例代理地址需替换为你的实际代理）
+        /*
+        const proxyUrl = 'https://你的后端代理地址'; // 例如 '/api/proxy?url='
+        const bingApi = 'https://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1&mkt=zh-CN';
+        const response = await fetch(proxyUrl + encodeURIComponent(bingApi));
         const data = await response.json();
-        
-        // 从API响应中提取图片URL并拼接完整地址
         if (data.images && data.images.length > 0) {
             return `https://www.bing.com${data.images[0].url}`;
         }
-        
-        //  fallback到picsum
-        return `https://picsum.photos/800/600?random=${Math.random()}`;
+        */
     } catch (error) {
-        console.error('获取必应图片失败:', error);
-        // 出错时使用备用图片源
+        console.error('获取图片失败:', error);
+        // 最终 fallback 方案
         return `https://picsum.photos/800/600?random=${Math.random()}`;
     }
 }
 
-// 然后修改媒体项生成代码
+// 媒体项生成代码（保持结构不变，仅替换图片获取逻辑）
 if (type === 'photos') {
     mediaItem.innerHTML = `
         <div class="media-container">
@@ -558,11 +563,11 @@ if (type === 'photos') {
         </div>
     `;
 } else {
-    // 对于视频，使用必应随机图片作为封面
-    getBingRandomImageUrl().then(bingImageUrl => {
+    // 使用修复跨域后的图片获取函数
+    getRandomImageUrl().then(imageUrl => {
         mediaItem.innerHTML = `
             <div class="media-container">
-                <video poster="${bingImageUrl}" class="w-full h-auto transition-transform duration-700 ease-out">
+                <video poster="${imageUrl}" class="w-full h-auto transition-transform duration-700 ease-out">
                     <source src="${fileUrl}" type="video/${fileName.split('.').pop()}">
                 </video>
                 <div class="media-overlay flex items-end">
@@ -577,6 +582,7 @@ if (type === 'photos') {
         `;
     });
 }
+
 
                     // // 根据类型创建不同的媒体元素
                     // if (type === 'photos') {
