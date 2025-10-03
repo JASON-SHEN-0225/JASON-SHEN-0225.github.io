@@ -19,6 +19,7 @@
                         accent: '#d4af37',
                         success: '#4CAF50',
                         danger: '#f44336',
+                        warning: '#ff9800', // 新增警告色（用于未配置密钥等状态）
                         light: '#f8f8f8',
                         dark: '#0f0f0f'
                     },
@@ -89,7 +90,7 @@
                     <p id="success-count" class="text-2xl font-medium text-success">0</p>
                 </div>
                 <div class="p-4 border border-gray-200 rounded-lg">
-                    <p class="text-sm text-secondary">不可访问</p>
+                    <p class="text-sm text-secondary">不可访问/异常</p>
                     <p id="error-count" class="text-2xl font-medium text-danger">0</p>
                 </div>
             </div>
@@ -97,6 +98,10 @@
                 <button id="refresh-btn" class="px-4 py-2 bg-accent text-white rounded hover:bg-accent/90 transition-colors flex items-center">
                     <i class="fa fa-refresh mr-2"></i> 重新检查
                 </button>
+                <!-- 新增Unsplash密钥提示 -->
+                <p class="text-xs text-warning mt-3 flex items-center">
+                    <i class="fa fa-info-circle mr-1"></i> Unsplash检查需在主页配置API Key（index.html中UNSPLASH_ACCESS_KEY）
+                </p>
             </div>
         </div>
 
@@ -113,7 +118,7 @@
                 <div class="flex space-x-2">
                     <button id="filter-all" class="px-3 py-1 bg-accent text-white text-sm rounded">全部</button>
                     <button id="filter-success" class="px-3 py-1 bg-gray-200 text-secondary text-sm rounded hover:bg-success hover:text-white transition-colors">可用</button>
-                    <button id="filter-error" class="px-3 py-1 bg-gray-200 text-secondary text-sm rounded hover:bg-danger hover:text-white transition-colors">不可用</button>
+                    <button id="filter-error" class="px-3 py-1 bg-gray-200 text-secondary text-sm rounded hover:bg-danger hover:text-white transition-colors">不可用/异常</button>
                 </div>
             </div>
             
@@ -131,25 +136,28 @@
     </footer>
 
     <script>
-        // 需要检查的资源列表
+        // 需要检查的资源列表（新增Unsplash相关资源）
         const resourcesToCheck = [
-            // 英雄区域视频
+            // 原有资源保持不变
             { url: 'https://cdn.pixabay.com/video/2018/03/21/15138-261402905_large.mp4', type: 'video', name: '英雄区域延时视频' },
             { url: 'https://www4.bing.com//th?id=OHR.OzoneEarth_ZH-CN0993915980_1920x1080.jpg&rf=LaDigue_1920x1080.jpg&pid=hp', type: 'image', name: '英雄区域备用图片' },
-            
-            // 关于页面图片（修复检查错误）
             { url: 'https://www.2008php.com/2019_Website_appreciate/2019-04-08/20190408225002qER57qER57.jpg', type: 'image', name: '摄影师肖像' },
-            
-            // GitHub图片资源
             { url: 'https://raw.githubusercontent.com/JASON-SHEN-0225/JASON-SHEN-0225.github.io/main/photos/', type: 'image', name: '摄影作品文件夹' },
-            
-            // GitHub视频资源
             { url: 'https://raw.githubusercontent.com/JASON-SHEN-0225/JASON-SHEN-0225.github.io/main/videos/', type: 'video', name: '视频作品文件夹' },
-            
-            // 视频封面备用图
             { url: 'https://picsum.photos/800/600?video-placeholder', type: 'image', name: '视频备用封面picsum端' },
+            { url: 'https://bing.img.run/1920x1080.php', type: 'image', name: '视频备用封面bing端' },
             
-            { url: 'https://bing.img.run/1920x1080.php', type: 'image', name: '视频备用封面bing端' }
+            // 新增Unsplash相关检查项
+            { 
+                url: 'https://api.unsplash.com/photos/random?orientation=landscape&w=800&h=600', 
+                type: 'unsplash-api', // 自定义类型：Unsplash API端点检查
+                name: 'Unsplash API端点可用性' 
+            },
+            { 
+                url: 'https://source.unsplash.com/random/800x600', 
+                type: 'unsplash-web', // 自定义类型：Unsplash网页图片源检查
+                name: 'Unsplash网页图片源（source.unsplash.com）' 
+            }
         ];
 
         // DOM元素
@@ -164,11 +172,12 @@
         const filterSuccessBtn = document.getElementById('filter-success');
         const filterErrorBtn = document.getElementById('filter-error');
 
-        // 状态计数
+        // 状态计数（新增warning状态，用于未配置密钥等非错误但需注意的情况）
         let stats = {
             total: 0,
             success: 0,
-            error: 0
+            error: 0,
+            warning: 0 // 警告状态（如未配置密钥）
         };
 
         // 页面加载完成后检查资源
@@ -184,7 +193,7 @@
 
         // 检查所有资源
         function checkAllResources() {
-            stats = { total: resourcesToCheck.length, success: 0, error: 0 };
+            stats = { total: resourcesToCheck.length, success: 0, error: 0, warning: 0 };
             resourcesList.innerHTML = '';
             loadingEl.classList.remove('hidden');
             resourcesContainer.classList.add('hidden');
@@ -198,7 +207,7 @@
             });
         }
 
-        // 检查单个资源（修复摄影师照片检查错误）
+        // 检查单个资源（新增Unsplash类型处理）
         function checkResource(resource) {
             // 创建资源项元素
             const resourceItem = document.createElement('div');
@@ -209,7 +218,7 @@
             resourceItem.innerHTML = `
                 <div class="flex items-start mb-2 md:mb-0">
                     <div class="mr-3 mt-1">
-                        <i class="fa fa-${resource.type === 'image' ? 'image' : 'video-camera'} text-secondary"></i>
+                        <i class="fa fa-${getIconByType(resource.type)} text-secondary"></i>
                     </div>
                     <div>
                         <h3 class="font-medium text-sm md:text-base">${resource.name}</h3>
@@ -224,120 +233,201 @@
             
             resourcesList.appendChild(resourceItem);
 
-            // 根据资源类型使用不同的检查方法（重点修复图片检查）
-            if (resource.type === 'image') {
-                // 图片检查：使用Image对象（修复跨域问题）
-                const img = new Image();
-                img.crossOrigin = 'anonymous'; // 允许跨域图片检查
-                // 添加时间戳防止缓存影响
-                img.src = resource.url + (resource.url.includes('?') ? '&' : '?') + 't=' + new Date().getTime();
-                
-                // 10秒超时处理
-                const timeout = setTimeout(() => {
-                    console.log(`图片检查超时: ${resource.name}`);
-                    updateResourceStatus(resourceItem, false);
-                }, 10000);
-                
-                // 图片加载成功
-                img.onload = () => {
-                    clearTimeout(timeout);
-                    console.log(`图片检查成功: ${resource.name}`);
-                    updateResourceStatus(resourceItem, true);
-                };
-                
-                // 图片加载失败
-                img.onerror = () => {
-                    clearTimeout(timeout);
-                    console.log(`图片检查失败: ${resource.name}`);
-                    // 特殊处理摄影师肖像（已知可访问但偶发错误的情况）
-                    if (resource.name === '摄影师肖像') {
-                        // 二次验证
-                        const secondCheck = new Image();
-                        secondCheck.crossOrigin = 'anonymous';
-                        secondCheck.src = resource.url;
-                        secondCheck.onload = () => {
-                            updateResourceStatus(resourceItem, true);
-                        };
-                        secondCheck.onerror = () => {
-                            updateResourceStatus(resourceItem, false);
-                        };
-                    } else {
-                        updateResourceStatus(resourceItem, false);
-                    }
-                };
-            } else if (resource.type === 'video') {
-                // 视频检查：使用Video对象
-                const video = document.createElement('video');
-                video.crossOrigin = 'anonymous';
-                video.src = resource.url + (resource.url.includes('?') ? '&' : '?') + 't=' + new Date().getTime();
-                
-                // 15秒超时处理
-                const timeout = setTimeout(() => {
-                    console.log(`视频检查超时: ${resource.name}`);
-                    updateResourceStatus(resourceItem, false);
-                }, 15000);
-                
-                // 视频元数据加载成功
-                video.onloadedmetadata = () => {
-                    clearTimeout(timeout);
-                    updateResourceStatus(resourceItem, true);
-                };
-                
-                // 视频加载失败
-                video.onerror = () => {
-                    clearTimeout(timeout);
-                    // 失败时尝试HEAD请求再次验证
-                    fetch(resource.url, { method: 'HEAD', mode: 'cors' })
-                        .then(response => {
-                            updateResourceStatus(resourceItem, response.ok);
-                        })
-                        .catch(() => {
-                            updateResourceStatus(resourceItem, false);
-                        });
-                };
+            // 根据资源类型使用不同的检查方法
+            switch (resource.type) {
+                case 'image':
+                    checkImageResource(resource, resourceItem);
+                    break;
+                case 'video':
+                    checkVideoResource(resource, resourceItem);
+                    break;
+                case 'unsplash-api':
+                    checkUnsplashApiResource(resource, resourceItem); // Unsplash API检查
+                    break;
+                case 'unsplash-web':
+                    checkImageResource(resource, resourceItem); // Unsplash网页图片用普通图片检查
+                    break;
+                default:
+                    checkDefaultResource(resource, resourceItem);
             }
         }
 
-        // 更新资源状态显示
-        function updateResourceStatus(element, isSuccess) {
-            // 更新计数
-            if (isSuccess) {
-                stats.success++;
-                element.dataset.status = 'success';
-                element.innerHTML = `
-                    <div class="flex items-start mb-2 md:mb-0">
-                        <div class="mr-3 mt-1">
-                            <i class="fa fa-${element.dataset.type === 'image' ? 'image' : 'video-camera'} text-secondary"></i>
-                        </div>
-                        <div>
-                            <h3 class="font-medium text-sm md:text-base">${element.querySelector('h3').textContent}</h3>
-                            <p class="text-xs md:text-sm text-secondary break-all mt-1">${element.querySelector('p').textContent}</p>
-                        </div>
-                    </div>
-                    <div class="flex items-center text-success">
-                        <span class="status-indicator bg-success mr-2"></span>
-                        <span class="text-sm">可访问</span>
-                    </div>
-                `;
-            } else {
-                stats.error++;
-                element.dataset.status = 'error';
-                element.innerHTML = `
-                    <div class="flex items-start mb-2 md:mb-0">
-                        <div class="mr-3 mt-1">
-                            <i class="fa fa-${element.dataset.type === 'image' ? 'image' : 'video-camera'} text-secondary"></i>
-                        </div>
-                        <div>
-                            <h3 class="font-medium text-sm md:text-base">${element.querySelector('h3').textContent}</h3>
-                            <p class="text-xs md:text-sm text-secondary break-all mt-1">${element.querySelector('p').textContent}</p>
-                        </div>
-                    </div>
-                    <div class="flex items-center text-danger">
-                        <span class="status-indicator bg-danger mr-2"></span>
-                        <span class="text-sm">不可访问</span>
-                    </div>
-                `;
+        // 根据资源类型获取图标
+        function getIconByType(type) {
+            switch (type) {
+                case 'image':
+                case 'unsplash-web':
+                    return 'image';
+                case 'video':
+                    return 'video-camera';
+                case 'unsplash-api':
+                    return 'code'; // API用代码图标
+                default:
+                    return 'link';
             }
+        }
+
+        // 检查图片资源（原有逻辑保留）
+        function checkImageResource(resource, element) {
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            img.src = resource.url + (resource.url.includes('?') ? '&' : '?') + 't=' + new Date().getTime();
+            
+            const timeout = setTimeout(() => {
+                updateResourceStatus(element, false, '超时');
+            }, 10000);
+            
+            img.onload = () => {
+                clearTimeout(timeout);
+                updateResourceStatus(element, true);
+            };
+            
+            img.onerror = () => {
+                clearTimeout(timeout);
+                // 特殊处理摄影师肖像二次验证
+                if (resource.name === '摄影师肖像') {
+                    const secondCheck = new Image();
+                    secondCheck.crossOrigin = 'anonymous';
+                    secondCheck.src = resource.url;
+                    secondCheck.onload = () => updateResourceStatus(element, true);
+                    secondCheck.onerror = () => updateResourceStatus(element, false, '加载失败');
+                } else {
+                    updateResourceStatus(element, false, '加载失败');
+                }
+            };
+        }
+
+        // 检查视频资源（原有逻辑保留）
+        function checkVideoResource(resource, element) {
+            const video = document.createElement('video');
+            video.crossOrigin = 'anonymous';
+            video.src = resource.url + (resource.url.includes('?') ? '&' : '?') + 't=' + new Date().getTime();
+            
+            const timeout = setTimeout(() => {
+                updateResourceStatus(element, false, '超时');
+            }, 15000);
+            
+            video.onloadedmetadata = () => {
+                clearTimeout(timeout);
+                updateResourceStatus(element, true);
+            };
+            
+            video.onerror = () => {
+                clearTimeout(timeout);
+                fetch(resource.url, { method: 'HEAD', mode: 'cors' })
+                    .then(response => {
+                        if (response.ok) {
+                            updateResourceStatus(element, true, 'HEAD请求成功（视频可访问）');
+                        } else {
+                            updateResourceStatus(element, false, `HTTP ${response.status}`);
+                        }
+                    })
+                    .catch(() => {
+                        updateResourceStatus(element, false, 'HEAD请求失败');
+                    });
+            };
+        }
+
+        // 检查Unsplash API资源（新增核心逻辑）
+        function checkUnsplashApiResource(resource, element) {
+            // 注意：此处仅检查API端点可访问性，实际使用需在主页配置密钥
+            const unsplashHeaders = {
+                'Accept-Version': 'v1',
+                // 用占位符提示密钥配置，实际检查不依赖真实密钥（避免暴露风险）
+                'Authorization': 'Client-ID YOUR_UNSPLASH_ACCESS_KEY（需在index.html配置）'
+            };
+
+            const timeout = setTimeout(() => {
+                updateResourceStatus(element, false, 'API请求超时');
+            }, 8000);
+
+            fetch(resource.url, {
+                method: 'GET',
+                headers: unsplashHeaders,
+                mode: 'cors'
+            })
+            .then(response => {
+                clearTimeout(timeout);
+                if (response.ok) {
+                    // API返回成功（说明端点可访问，密钥有效性需在主页验证）
+                    updateResourceStatus(element, true, 'API端点可访问（密钥需在主页配置）');
+                } else if (response.status === 401) {
+                    // 401：未授权（正常，因这里用的是占位符密钥）
+                    updateResourceStatus(element, false, '未授权（需在index.html配置有效Unsplash API Key）', 'warning');
+                } else if (response.status === 429) {
+                    // 429：请求超限
+                    updateResourceStatus(element, false, 'API请求超限（每日限额1000次）', 'warning');
+                } else {
+                    // 其他错误状态
+                    updateResourceStatus(element, false, `API错误（HTTP ${response.status}）`);
+                }
+            })
+            .catch(error => {
+                clearTimeout(timeout);
+                updateResourceStatus(element, false, `网络错误：${error.message}`);
+            });
+        }
+
+        // 检查默认资源（通用逻辑）
+        function checkDefaultResource(resource, element) {
+            const timeout = setTimeout(() => {
+                updateResourceStatus(element, false, '请求超时');
+            }, 10000);
+
+            fetch(resource.url, { method: 'HEAD', mode: 'cors' })
+                .then(response => {
+                    clearTimeout(timeout);
+                    if (response.ok) {
+                        updateResourceStatus(element, true);
+                    } else {
+                        updateResourceStatus(element, false, `HTTP ${response.status}`);
+                    }
+                })
+                .catch(error => {
+                    clearTimeout(timeout);
+                    updateResourceStatus(element, false, `请求失败：${error.message}`);
+                });
+        }
+
+        // 更新资源状态显示（新增warning状态处理）
+        function updateResourceStatus(element, isSuccess, note = '', statusType = '') {
+            // 确定最终状态（优先级：warning > success > error）
+            let finalStatus = statusType === 'warning' ? 'warning' : (isSuccess ? 'success' : 'error');
+            
+            // 更新计数
+            if (finalStatus === 'success') stats.success++;
+            else if (finalStatus === 'error') stats.error++;
+            else if (finalStatus === 'warning') stats.warning++;
+
+            // 状态样式与文本配置
+            const statusConfig = {
+                success: { color: 'text-success', bg: 'bg-success', text: '可访问' },
+                error: { color: 'text-danger', bg: 'bg-danger', text: '不可访问' },
+                warning: { color: 'text-warning', bg: 'bg-warning', text: '需注意' }
+            };
+            const config = statusConfig[finalStatus];
+
+            // 补充说明（非空时显示）
+            const noteHtml = note ? `<p class="text-xs mt-1 ${config.color}">${note}</p>` : '';
+
+            // 更新元素内容
+            element.dataset.status = finalStatus;
+            element.innerHTML = `
+                <div class="flex items-start mb-2 md:mb-0">
+                    <div class="mr-3 mt-1">
+                        <i class="fa fa-${getIconByType(element.dataset.type)} ${config.color}"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-medium text-sm md:text-base">${element.querySelector('h3').textContent}</h3>
+                        <p class="text-xs md:text-sm text-secondary break-all mt-1">${element.querySelector('p').textContent}</p>
+                        ${noteHtml}
+                    </div>
+                </div>
+                <div class="flex items-center ${config.color}">
+                    <span class="status-indicator ${config.bg} mr-2"></span>
+                    <span class="text-sm">${config.text}</span>
+                </div>
+            `;
             
             // 添加淡入动画
             element.classList.add('fade-in');
@@ -346,20 +436,21 @@
             updateStats();
             
             // 所有资源检查完成后隐藏加载状态
-            if (stats.success + stats.error === stats.total) {
+            if (stats.success + stats.error + stats.warning === stats.total) {
                 loadingEl.classList.add('hidden');
                 resourcesContainer.classList.remove('hidden');
             }
         }
 
-        // 更新统计数据显示
+        // 更新统计数据显示（新增warning计数合并到error显示，避免用户混淆）
         function updateStats() {
             totalCountEl.textContent = stats.total;
             successCountEl.textContent = stats.success;
-            errorCountEl.textContent = stats.error;
+            // 异常数 = 错误数 + 警告数（用户更关注"非可用"状态）
+            errorCountEl.textContent = stats.error + stats.warning;
         }
 
-        // 筛选资源显示
+        // 筛选资源显示（支持warning状态筛选）
         function filterResources(filter) {
             const allItems = document.querySelectorAll('.resource-item');
             
@@ -374,20 +465,15 @@
             } else if (filter === 'success') {
                 filterSuccessBtn.className = 'px-3 py-1 bg-success text-white text-sm rounded';
                 allItems.forEach(item => {
-                    if (item.dataset.status === 'success') {
-                        item.classList.remove('hidden');
-                    } else {
-                        item.classList.add('hidden');
-                    }
+                    item.dataset.status === 'success' ? item.classList.remove('hidden') : item.classList.add('hidden');
                 });
             } else if (filter === 'error') {
                 filterErrorBtn.className = 'px-3 py-1 bg-danger text-white text-sm rounded';
                 allItems.forEach(item => {
-                    if (item.dataset.status === 'error') {
-                        item.classList.remove('hidden');
-                    } else {
-                        item.classList.add('hidden');
-                    }
+                    // 筛选"错误"和"警告"状态（均视为异常）
+                    ['error', 'warning'].includes(item.dataset.status) 
+                        ? item.classList.remove('hidden') 
+                        : item.classList.add('hidden');
                 });
             }
         }
