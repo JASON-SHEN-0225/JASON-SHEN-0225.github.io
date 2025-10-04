@@ -23,14 +23,14 @@
                     fontFamily: {
                         sans: ['Inter', 'Helvetica', 'Arial', 'sans-serif'],
                         display: ['"Playfair Display"', 'serif'],
-                        elegant: ['"Merriweather"', 'Georgia', 'serif'] // 新增高级英文字体
+                        elegant: ['"Merriweather"', 'Georgia', 'serif']
                     }
                 }
             }
         }
     </script>
     
-    <!-- 导入字体（新增Merriweather高级字体） -->
+    <!-- 导入字体 -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600&family=Inter:wght@300;400;500&family=Merriweather:wght@300;400;700&display=swap">
     
     <style type="text/tailwindcss">
@@ -139,7 +139,7 @@
             .temp-video {
                 display: none !important;
             }
-            /* 1. 美化语言切换按钮 */
+            /* 语言切换按钮 */
             .lang-switch {
                 position: relative;
                 overflow: hidden;
@@ -177,7 +177,7 @@
                 letter-spacing: 0.5px;
                 transition: all 0.3s ease;
             }
-            /* 2. 中英文切换界面动画 */
+            /* 中英文切换界面动画 */
             .translate-item {
                 transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
                 opacity: 1;
@@ -187,7 +187,7 @@
                 opacity: 0;
                 transform: translateY(10px);
             }
-            /* 3. 英文界面特定句子高级字体 */
+            /* 英文界面特定句子高级字体 */
             .hero-desc-en {
                 font-family: 'Merriweather', Georgia, serif;
                 font-weight: 300;
@@ -195,26 +195,45 @@
                 letter-spacing: 0.3px;
                 line-height: 1.8;
             }
-            /* 4. 打字机动画 & 光标闪烁 */
-            .typewriter-text {
-                display: inline-block;
-                overflow: hidden;
-                white-space: pre-line; /* 保留换行 */
+            /* 4. 打字机动画 & 光标跟随优化 */
+            .typewriter-wrapper {
                 position: relative;
+                /* 固定容器高度，避免文字输出时高度变化 */
+                min-height: 220px; /* 根据最大文本高度设置 */
+                display: flex;
+                flex-direction: column;
+                justify-content: flex-start;
             }
+            .typewriter-group {
+                position: relative;
+                display: inline-block;
+                white-space: pre-line; /* 保留换行 */
+                line-height: 1.4;
+            }
+            /* 光标样式 - 跟随文字 */
             .typewriter-cursor {
-                position: absolute;
-                right: -8px;
-                bottom: 2px;
+                display: inline-block;
                 width: 6px;
                 height: 1.2em;
                 background-color: white;
+                margin-left: 2px;
+                vertical-align: baseline;
                 animation: cursor-blink 1.2s infinite;
-                display: none; /* 默认隐藏，打字完成后显示 */
+                opacity: 1;
             }
+            /* 光标闪烁动画 */
             @keyframes cursor-blink {
                 0%, 100% { opacity: 0; }
                 50% { opacity: 1; }
+            }
+            /* 按钮固定定位容器 */
+            .hero-btn-container {
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                width: 100%;
+                /* 确保按钮在文字输出完成后仍在正确位置 */
+                margin-top: 2rem;
             }
         }
     </style>
@@ -239,13 +258,13 @@
                     </ul>
                 </nav>
                 
-                <!-- 语言切换按钮 - 桌面端（美化版） -->
+                <!-- 语言切换按钮 - 桌面端 -->
                 <button id="lang-switch-desktop" class="lang-switch hidden md:flex">
                     <i class="fa fa-globe"></i>
                     <span id="lang-text-desktop" class="translate-item" data-key="lang_switch">ENG</span>
                 </button>
                 
-                <!-- 移动端菜单按钮 + 语言切换（美化版） -->
+                <!-- 移动端菜单按钮 + 语言切换 -->
                 <div class="flex items-center md:hidden gap-3">
                     <button id="lang-switch-mobile" class="lang-switch">
                         <i class="fa fa-globe"></i>
@@ -273,7 +292,7 @@
     </header>
 
 
-    <!-- 英雄区域 - 延时摄影 -->
+    <!-- 英雄区域 - 延时摄影（重点修复按钮位置和打字机） -->
     <section class="relative h-screen overflow-hidden">
         <div class="absolute inset-0 bg-black/30 z-10"></div>
         
@@ -287,19 +306,27 @@
         
         <div class="container mx-auto px-6 h-full flex items-center relative z-20">
             <div class="max-w-2xl text-white">
-                <!-- 4. 打字机动画标题 -->
-                <h2 class="text-3xl md:text-5xl lg:text-6xl font-display font-light mb-6 leading-tight">
-                    <span id="hero-title" class="typewriter-text translate-item" data-key="hero_title">捕捉光影<br>定格瞬间</span>
-                    <span class="typewriter-cursor"></span>
-                </h2>
-                <!-- 4. 打字机动画描述（英文时应用高级字体） -->
-                <p id="hero-desc" class="text-lg md:text-xl opacity-90 mb-8 max-w-lg font-light typewriter-text translate-item" data-key="hero_desc">
-                    用镜头讲述故事，每一段影像都是时间的诗篇
-                    <span class="typewriter-cursor"></span>
-                </p>
-                <a href="#photos" class="btn-primary inline-block border border-white text-white px-8 py-3 text-sm uppercase tracking-wider relative translate-item" data-key="hero_btn">
-                    浏览作品集
-                </a>
+                <!-- 1. 固定高度容器：解决按钮移动问题 -->
+                <div class="typewriter-wrapper">
+                    <!-- 打字机标题组 -->
+                    <div class="typewriter-group mb-4">
+                        <span id="hero-title" class="typewriter-text translate-item" data-key="hero_title">捕捉光影\n定格瞬间</span>
+                        <span id="title-cursor" class="typewriter-cursor"></span>
+                    </div>
+                    
+                    <!-- 打字机描述组 -->
+                    <div class="typewriter-group mb-6">
+                        <span id="hero-desc" class="typewriter-text translate-item" data-key="hero_desc">用镜头讲述故事，每一段影像都是时间的诗篇</span>
+                        <span id="desc-cursor" class="typewriter-cursor" style="display: none;"></span>
+                    </div>
+                    
+                    <!-- 2. 按钮固定容器：锁定在文字下方 -->
+                    <div class="hero-btn-container">
+                        <a href="#photos" class="btn-primary inline-block border border-white text-white px-8 py-3 text-sm uppercase tracking-wider relative translate-item" data-key="hero_btn">
+                            浏览作品集
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
         <div class="absolute bottom-10 left-1/2 transform -translate-x-1/2 z-20 text-white animate-bounce">
@@ -479,7 +506,7 @@
                 nav_contact: '联系',
                 nav_check: '状态检查',
                 lang_switch: 'ENG',
-                hero_title: '捕捉光影\n定格瞬间', // 用\n表示换行，适配打字机
+                hero_title: '捕捉光影\n定格瞬间', // 用\n表示换行
                 hero_desc: '用镜头讲述故事，每一段影像都是时间的诗篇',
                 hero_btn: '浏览作品集',
                 photos_title: '摄影作品',
@@ -535,7 +562,10 @@
         // 当前语言（默认中文）
         let currentLang = 'zh';
         // 打字机动画状态
-        let typewriterTimers = {}; // 存储定时器，避免重复触发
+        let typewriterState = {
+            title: { timer: null, currentIndex: 0, isComplete: false },
+            desc: { timer: null, currentIndex: 0, isComplete: false }
+        };
         
         // DOM元素
         const photosContainer = document.getElementById('photos-container');
@@ -560,7 +590,8 @@
         // 打字机元素
         const heroTitleEl = document.getElementById('hero-title');
         const heroDescEl = document.getElementById('hero-desc');
-        const typewriterElements = [heroTitleEl, heroDescEl];
+        const titleCursorEl = document.getElementById('title-cursor');
+        const descCursorEl = document.getElementById('desc-cursor');
         
         // 存储加载的媒体数据
         let allMedia = {
@@ -576,7 +607,7 @@
             updateLanguage();
             // 初始化打字机动画（延迟0.5秒，等待页面渲染）
             setTimeout(() => {
-                startTypewriterAnimation();
+                startTypewriterAnimation('title');
             }, 500);
             
             // 加载媒体
@@ -665,13 +696,19 @@
                 item.classList.add('transitioning');
             });
             
-            // 2. 延迟切换语言（等待淡出动画完成）
+            // 2. 清除打字机定时器
+            clearTypewriterTimers();
+            
+            // 3. 延迟切换语言（等待淡出动画完成）
             setTimeout(() => {
                 currentLang = currentLang === 'zh' ? 'en' : 'zh';
                 updateLanguage();
                 
-                // 3. 重新触发打字机动画
-                startTypewriterAnimation();
+                // 4. 重置打字机状态并重新开始动画
+                resetTypewriterState();
+                setTimeout(() => {
+                    startTypewriterAnimation('title');
+                }, 300);
             }, 300); // 与CSS过渡时间一致
         }
         
@@ -684,10 +721,10 @@
                 const key = item.getAttribute('data-key');
                 if (translations[currentLang][key]) {
                     // 处理打字机元素（单独处理换行）
-                    if (item.classList.contains('typewriter-text')) {
+                    if (item === heroTitleEl || item === heroDescEl) {
                         // 用\n替换<br>，适配打字机的pre-line
                         const content = translations[currentLang][key].replace(/<br>/g, '\n');
-                        item.textContent = ''; // 清空内容，准备打字机
+                        item.textContent = ''; // 清空内容
                     } else {
                         // 处理包含HTML的文本（如换行）
                         if (item.tagName === 'H2' || item.tagName === 'P' || item.tagName === 'A') {
@@ -716,52 +753,85 @@
         }
         
         /**
-         * 3. 打字机动画（支持中英文、换行、光标闪烁）
+         * 3. 打字机动画核心优化（解决所有问题）
+         * @param {string} type - 'title' 或 'desc'
          */
-        function startTypewriterAnimation() {
-            // 1. 清除之前的定时器（避免重复）
-            Object.values(typewriterTimers).forEach(timer => clearInterval(timer));
-            typewriterTimers = {};
+        function startTypewriterAnimation(type) {
+            const el = type === 'title' ? heroTitleEl : heroDescEl;
+            const cursorEl = type === 'title' ? titleCursorEl : descCursorEl;
+            const state = typewriterState[type];
+            const fullText = translations[currentLang][type === 'title' ? 'hero_title' : 'hero_desc'];
+            const textArray = fullText.split('');
             
-            // 2. 隐藏所有光标
-            document.querySelectorAll('.typewriter-cursor').forEach(cursor => {
-                cursor.style.display = 'none';
-            });
+            // 显示当前光标
+            cursorEl.style.display = 'inline-block';
             
-            // 3. 逐个处理打字机元素
-            typewriterElements.forEach((el, index) => {
-                const key = el.getAttribute('data-key');
-                const fullText = translations[currentLang][key]; // 原始文本（含\n）
-                const textArray = fullText.split(''); // 拆分成字符数组
-                let currentIndex = 0;
-                el.textContent = ''; // 清空内容
-                
-                // 4. 显示当前元素的光标（初始隐藏，打字完成后显示）
-                const cursor = el.nextElementSibling;
-                if (cursor && cursor.classList.contains('typewriter-cursor')) {
-                    cursor.style.display = 'none';
-                }
-                
-                // 5. 打字机定时器
-                typewriterTimers[el.id] = setInterval(() => {
-                    if (currentIndex < textArray.length) {
-                        // 追加当前字符
-                        el.textContent += textArray[currentIndex];
-                        currentIndex++;
-                        
-                        // 调整光标位置（随文字长度变化）
-                        if (cursor) {
-                            cursor.style.right = '-8px';
-                        }
+            // 随机间隔函数（模拟AI输出）
+            const getRandomDelay = () => {
+                // 中文：80-150ms 随机，英文：50-120ms 随机
+                return currentLang === 'zh' 
+                    ? Math.floor(Math.random() * 70) + 80 
+                    : Math.floor(Math.random() * 70) + 50;
+            };
+            
+            // 打字机核心逻辑
+            const typeChar = () => {
+                if (state.currentIndex < textArray.length) {
+                    // 追加当前字符（光标自动跟随）
+                    el.textContent += textArray[state.currentIndex];
+                    state.currentIndex++;
+                    
+                    // 设置随机间隔，模拟AI输出的不规律性
+                    state.timer = setTimeout(typeChar, getRandomDelay());
+                } else {
+                    // 打字完成
+                    state.isComplete = true;
+                    
+                    // 如果是标题，完成后开始描述的动画
+                    if (type === 'title') {
+                        setTimeout(() => {
+                            startTypewriterAnimation('desc');
+                        }, 500);
                     } else {
-                        // 6. 打字完成，显示光标闪烁
-                        clearInterval(typewriterTimers[el.id]);
-                        if (cursor) {
-                            cursor.style.display = 'block';
-                        }
+                        // 如果是描述，完成后保持光标在最后
+                        cursorEl.style.display = 'inline-block';
                     }
-                }, currentLang === 'zh' ? 100 : 60); // 中文打字速度慢一点，英文快一点
-            });
+                }
+            };
+            
+            // 开始打字
+            typeChar();
+        }
+        
+        /**
+         * 4. 重置打字机状态
+         */
+        function resetTypewriterState() {
+            // 重置元素内容
+            heroTitleEl.textContent = '';
+            heroDescEl.textContent = '';
+            
+            // 重置状态
+            typewriterState = {
+                title: { timer: null, currentIndex: 0, isComplete: false },
+                desc: { timer: null, currentIndex: 0, isComplete: false }
+            };
+            
+            // 隐藏光标
+            titleCursorEl.style.display = 'none';
+            descCursorEl.style.display = 'none';
+        }
+        
+        /**
+         * 5. 清除打字机定时器
+         */
+        function clearTypewriterTimers() {
+            if (typewriterState.title.timer) {
+                clearTimeout(typewriterState.title.timer);
+            }
+            if (typewriterState.desc.timer) {
+                clearTimeout(typewriterState.desc.timer);
+            }
         }
         
         /**
@@ -1044,7 +1114,7 @@
                             loadingElItem.style.opacity = 0;
                             clearTimeout(itemLoadTimeout);
                         } catch (e) {
-                            videoEl.poster = `https://picsum.photos/1920/1080?fallback-${Date.now()}`;
+                            videoEl.poster = `https://picsum.photos/800/600?fallback-${Date.now()}`;
                             loadingElItem.style.opacity = 0;
                             clearTimeout(itemLoadTimeout);
                         }
