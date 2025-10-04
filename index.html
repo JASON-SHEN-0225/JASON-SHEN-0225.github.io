@@ -189,12 +189,12 @@
                 gap: 1rem;
             }
             .typewriter-text {
-                white-space: pre-wrap;
-                overflow: hidden;
-                position: relative;
-                display: inline-block;
-                line-height: 1.2;
-            }
+    white-space: pre-wrap; /* 支持换行符 */
+    overflow: hidden;
+    position: relative;
+    display: block; /* 改为块级元素，确保换行正常 */
+    line-height: 1.4; /* 增加行高，让两行更清晰 */
+}
             .typewriter-cursor {
                 display: inline-block;
                 width: 1ch;
@@ -562,7 +562,7 @@
                 nav_contact: '联系',
                 nav_check: '状态检查',
                 lang_switch: 'ENG',
-                hero_title: '捕捉光影\n\n\n\n\n\n\n定格瞬间',
+                hero_title: '捕捉光影\n定格瞬间',
                 hero_desc: '用镜头讲述故事，每一段影像都是时间的诗篇',
                 hero_btn: '浏览作品集',
                 photos_title: '摄影作品',
@@ -758,24 +758,39 @@
         /**
          * 打字机效果
          */
-        function typeWriter(element, text, delay = 0, speed = 50) {
+        function typeWriter(element, text, delay = 0, speed = 50, keepCursorAfterFinish = false) {
             return new Promise((resolve) => {
                 element.innerHTML = '';
+                // 创建光标元素
                 const cursor = document.createElement('span');
                 cursor.className = 'typewriter-cursor';
                 element.appendChild(cursor);
 
+                // 拆分文本为字符数组（保留换行符）
                 const chars = text.split('');
                 let charIndex = 0;
 
                 setTimeout(() => {
                     function typeNextChar() {
                         if (charIndex < chars.length) {
+                            const currentChar = chars[charIndex];
+
+                            // 【关键】如果是换行符，插入<br>标签，不创建字符span
+                            if (currentChar === '\n') {
+                                const lineBreak = document.createElement('br');
+                                element.insertBefore(lineBreak, cursor);
+                                charIndex++;
+                                typewriterInterval = setTimeout(typeNextChar, speed);
+                                return; // 跳过后续字符处理逻辑
+                            }
+
+                            // 处理普通字符
                             const charSpan = document.createElement('span');
                             charSpan.className = 'typewriter-char';
-                            charSpan.textContent = chars[charIndex] === ' ' ? '\u00A0' : chars[charIndex];
+                            charSpan.textContent = currentChar === ' ' ? '\u00A0' : currentChar;
                             element.insertBefore(charSpan, cursor);
 
+                            // 字符弹出动画
                             setTimeout(() => {
                                 charSpan.classList.add('typed');
                             }, 10);
@@ -783,6 +798,10 @@
                             charIndex++;
                             typewriterInterval = setTimeout(typeNextChar, speed);
                         } else {
+                            // 完成后是否保留光标
+                            if (!keepCursorAfterFinish) {
+                                cursor.remove();
+                            }
                             resolve();
                         }
                     }
@@ -842,9 +861,11 @@
             const titleText = translations[currentLang].hero_title;
             const descText = translations[currentLang].hero_desc;
 
-            typeWriter(heroTitleEl, titleText, 300, currentLang === 'zh' ? 80 : 50)
+            // 主标题：打字时显示光标，完成后移除（keepCursorAfterFinish: false）
+            typeWriter(heroTitleEl, titleText, 300, currentLang === 'zh' ? 80 : 50, false)
                 .then(() => {
-                    typeWriter(heroDescEl, descText, 500, currentLang === 'zh' ? 60 : 40);
+                    // 副标题：打字时显示光标，完成后保留（keepCursorAfterFinish: true）
+                    typeWriter(heroDescEl, descText, 500, currentLang === 'zh' ? 60 : 40, true);
                 });
         }
 
@@ -1049,7 +1070,7 @@
                     } else {
                         // 视频（添加翻页动画）
                         currentMedia.innerHTML = `
-                            <video class="single-media-item" controls poster="https://picsum.photos/1200/800?video-${Date.now()}">
+                            <video class="single-media-item" controls poster="https://picsum.photos/1920/1080?video-${Date.now()}">
                                 <source src="${fileUrl}" type="video/${currentItem.name.split('.').pop().toLowerCase()}">
                                 <p class="text-center text-secondary translate-item" data-key="video_not_supported">${translations[currentLang].video_not_supported}</p>
                             </video>
