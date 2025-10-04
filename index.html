@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>光影集 | 申家铖摄影作品</title>
+    <title id="page-title" class="translate-item" data-key="page_title">光影集 | 申家铖摄影作品</title>
     <link rel="icon" href="/favicon.ico" type="image/x-icon">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
@@ -138,6 +138,25 @@
             .temp-video {
                 display: none !important;
             }
+            /* 语言切换按钮样式 */
+            .lang-switch {
+                position: relative;
+                overflow: hidden;
+                transition: all 0.3s ease;
+                border: 1px solid rgba(26, 26, 26, 0.1);
+            }
+            .lang-switch:hover {
+                background-color: rgba(212, 175, 55, 0.05);
+                border-color: rgba(212, 175, 55, 0.3);
+            }
+            .lang-switch span {
+                transition: all 0.3s ease;
+                display: inline-block;
+            }
+            /* 文本过渡动画 */
+            .translate-item {
+                transition: all 0.3s ease;
+            }
         }
     </style>
 </head>
@@ -146,23 +165,33 @@
     <header class="fixed top-0 left-0 right-0 bg-light/60 backdrop-blur-sm z-50 transition-all duration-300">
         <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-6 flex justify-between items-center">
             <h1 class="text-3xl md:text-4xl font-display font-light tracking-wide">
-                <span class="text-primary">光影</span><span class="text-accent">.</span>
+                <span class="text-primary translate-item" data-key="brand_name">光影</span><span class="text-accent">.</span>
             </h1>
             
             <!-- 桌面端导航 -->
-            <div class="flex items-center">
+            <div class="flex items-center gap-4">
                 <nav class="hidden md:flex items-center">
                     <ul class="flex flex-wrap gap-x-6 gap-y-2">
-                        <li><a href="#photos" class="text-sm uppercase tracking-wider hover:text-accent transition-colors">照片</a></li>
-                        <li><a href="#videos" class="text-sm uppercase tracking-wider hover:text-accent transition-colors">视频</a></li>
-                        <li><a href="#about" class="text-sm uppercase tracking-wider hover:text-accent transition-colors">关于</a></li>
-                        <li><a href="#contact" class="text-sm uppercase tracking-wider hover:text-accent transition-colors">联系</a></li>
-                        <li><a href="check.html" class="text-sm uppercase tracking-wider hover:text-accent transition-colors">状态检查</a></li>
+                        <li><a href="#photos" class="text-sm uppercase tracking-wider hover:text-accent transition-colors translate-item" data-key="nav_photos">照片</a></li>
+                        <li><a href="#videos" class="text-sm uppercase tracking-wider hover:text-accent transition-colors translate-item" data-key="nav_videos">视频</a></li>
+                        <li><a href="#about" class="text-sm uppercase tracking-wider hover:text-accent transition-colors translate-item" data-key="nav_about">关于</a></li>
+                        <li><a href="#contact" class="text-sm uppercase tracking-wider hover:text-accent transition-colors translate-item" data-key="nav_contact">联系</a></li>
+                        <li><a href="check.html" class="text-sm uppercase tracking-wider hover:text-accent transition-colors translate-item" data-key="nav_check">状态检查</a></li>
                     </ul>
                 </nav>
                 
-                <!-- 移动端菜单按钮 -->
-                <div class="flex items-center md:hidden">
+                <!-- 语言切换按钮 - 桌面端 -->
+                <button id="lang-switch-desktop" class="lang-switch px-4 py-2 rounded-sm text-sm font-medium flex items-center gap-1.5 hidden md:flex">
+                    <i class="fa fa-globe text-accent"></i>
+                    <span id="lang-text-desktop" class="translate-item" data-key="lang_switch">ENG</span>
+                </button>
+                
+                <!-- 移动端菜单按钮 + 语言切换 -->
+                <div class="flex items-center md:hidden gap-3">
+                    <button id="lang-switch-mobile" class="lang-switch px-3 py-1.5 rounded-sm text-sm font-medium flex items-center gap-1">
+                        <i class="fa fa-globe text-accent"></i>
+                        <span id="lang-text-mobile" class="translate-item" data-key="lang_switch">ENG</span>
+                    </button>
                     <button class="text-primary focus:outline-none" id="menu-toggle">
                         <i class="fa fa-bars text-xl"></i>
                     </button>
@@ -174,11 +203,11 @@
         <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-gray-100">
             <div class="container mx-auto px-6 py-4">
                 <ul class="space-y-4">
-                    <li><a href="#photos" class="block py-2 text-sm uppercase tracking-wider hover:text-accent transition-colors">照片</a></li>
-                    <li><a href="#videos" class="block py-2 text-sm uppercase tracking-wider hover:text-accent transition-colors">视频</a></li>
-                    <li><a href="#about" class="block py-2 text-sm uppercase tracking-wider hover:text-accent transition-colors">关于</a></li>
-                    <li><a href="#contact" class="block py-2 text-sm uppercase tracking-wider hover:text-accent transition-colors">联系</a></li>
-                    <li><a href="check.html" class="block py-2 text-sm uppercase tracking-wider hover:text-accent transition-colors">状态检查</a></li>
+                    <li><a href="#photos" class="block py-2 text-sm uppercase tracking-wider hover:text-accent transition-colors translate-item" data-key="nav_photos">照片</a></li>
+                    <li><a href="#videos" class="block py-2 text-sm uppercase tracking-wider hover:text-accent transition-colors translate-item" data-key="nav_videos">视频</a></li>
+                    <li><a href="#about" class="block py-2 text-sm uppercase tracking-wider hover:text-accent transition-colors translate-item" data-key="nav_about">关于</a></li>
+                    <li><a href="#contact" class="block py-2 text-sm uppercase tracking-wider hover:text-accent transition-colors translate-item" data-key="nav_contact">联系</a></li>
+                    <li><a href="check.html" class="block py-2 text-sm uppercase tracking-wider hover:text-accent transition-colors translate-item" data-key="nav_check">状态检查</a></li>
                 </ul>
             </div>
         </div>
@@ -199,13 +228,13 @@
         
         <div class="container mx-auto px-6 h-full flex items-center relative z-20">
             <div class="max-w-2xl text-white">
-                <h2 class="text-3xl md:text-5xl lg:text-6xl font-display font-light mb-6 leading-tight">
+                <h2 class="text-3xl md:text-5xl lg:text-6xl font-display font-light mb-6 leading-tight translate-item" data-key="hero_title">
                     捕捉光影<br>定格瞬间
                 </h2>
-                <p class="text-lg md:text-xl opacity-90 mb-8 max-w-lg font-light">
+                <p class="text-lg md:text-xl opacity-90 mb-8 max-w-lg font-light translate-item" data-key="hero_desc">
                     用镜头讲述故事，每一段影像都是时间的诗篇
                 </p>
-                <a href="#photos" class="btn-primary inline-block border border-white text-white px-8 py-3 text-sm uppercase tracking-wider relative">
+                <a href="#photos" class="btn-primary inline-block border border-white text-white px-8 py-3 text-sm uppercase tracking-wider relative translate-item" data-key="hero_btn">
                     浏览作品集
                 </a>
             </div>
@@ -220,9 +249,9 @@
     <section id="photos" class="py-24 bg-white section-fade-in">
         <div class="container mx-auto px-6">
             <div class="text-center mb-16">
-                <h2 class="text-3xl md:text-4xl font-display font-light mb-4">摄影作品</h2>
+                <h2 class="text-3xl md:text-4xl font-display font-light mb-4 translate-item" data-key="photos_title">摄影作品</h2>
                 <div class="w-20 h-px bg-accent mx-auto mb-6"></div>
-                <p class="text-secondary max-w-2xl mx-auto">精选摄影作品，记录生活中的美好瞬间</p>
+                <p class="text-secondary max-w-2xl mx-auto translate-item" data-key="photos_desc">精选摄影作品，记录生活中的美好瞬间</p>
                 
                 <!-- 加载指示器 -->
                 <div id="photos-loading" class="mt-12 flex justify-center items-center">
@@ -238,7 +267,7 @@
             <!-- 错误信息 -->
             <div id="photos-error" class="hidden text-center py-24 text-secondary">
                 <i class="fa fa-exclamation-circle text-3xl mb-4"></i>
-                <p>无法加载作品，请稍后再试</p>
+                <p class="translate-item" data-key="load_error">无法加载作品，请稍后再试</p>
             </div>
         </div>
     </section>
@@ -248,10 +277,10 @@
     <section id="videos" class="py-24 bg-light section-fade-in">
         <div class="container mx-auto px-6">
             <div class="text-center mb-16">
-                <h2 class="text-3xl md:text-4xl font-display font-light mb-4">视频作品</h2>
+                <h2 class="text-3xl md:text-4xl font-display font-light mb-4 translate-item" data-key="videos_title">视频作品</h2>
                 <div class="w-20 h-px bg-accent mx-auto mb-6"></div>
-                <p class="text-secondary max-w-2xl mx-auto">延时摄影与动态影像，捕捉时间的流动</p>
-                <p class="text-secondary max-w-2xl mx-auto">视频封面可能与视频内容无关</p>
+                <p class="text-secondary max-w-2xl mx-auto translate-item" data-key="videos_desc1">延时摄影与动态影像，捕捉时间的流动</p>
+                <p class="text-secondary max-w-2xl mx-auto mt-2 translate-item" data-key="videos_desc2">视频封面可能与视频内容无关</p>
                 
                 <!-- 加载指示器 -->
                 <div id="videos-loading" class="mt-12 flex justify-center items-center">
@@ -267,7 +296,7 @@
             <!-- 错误信息 -->
             <div id="videos-error" class="hidden text-center py-24 text-secondary">
                 <i class="fa fa-exclamation-circle text-3xl mb-4"></i>
-                <p>无法加载视频，请稍后再试</p>
+                <p class="translate-item" data-key="load_error">无法加载视频，请稍后再试</p>
             </div>
         </div>
     </section>
@@ -281,12 +310,12 @@
                     <img src="https://www.2008php.com/2019_Website_appreciate/2019-04-08/20190408225002qER57qER57.jpg" alt="摄影师肖像" class="w-full h-auto object-cover rounded-sm shadow-lg">
                 </div>
                 <div>
-                    <h2 class="text-3xl md:text-4xl font-display font-light mb-4">关于摄影师 申家铖 JasonS</h2>
+                    <h2 class="text-3xl md:text-4xl font-display font-light mb-4 translate-item" data-key="about_title">关于摄影师 申家铖 JasonS</h2>
                     <div class="w-20 h-px bg-accent mb-6"></div>
-                    <p class="text-secondary mb-6 leading-relaxed">
+                    <p class="text-secondary mb-6 leading-relaxed translate-item" data-key="about_desc">
                     相信每一张照片都有自己的灵魂与故事。透过镜头，观察世界的细微之处，捕捉那些稍纵即逝的光影瞬间。
                     </p>
-                    <a href="#contact" class="btn-primary inline-block border border-primary text-primary px-8 py-3 text-sm uppercase tracking-wider relative">
+                    <a href="#contact" class="btn-primary inline-block border border-primary text-primary px-8 py-3 text-sm uppercase tracking-wider relative translate-item" data-key="about_btn">
                         联系我
                     </a>
                 </div>
@@ -299,9 +328,9 @@
     <section id="contact" class="py-24 bg-light section-fade-in">
         <div class="container mx-auto px-6 max-w-4xl">
             <div class="text-center mb-16">
-                <h2 class="text-3xl md:text-4xl font-display font-light mb-4">联系我</h2>
+                <h2 class="text-3xl md:text-4xl font-display font-light mb-4 translate-item" data-key="contact_title">联系我</h2>
                 <div class="w-20 h-px bg-accent mx-auto mb-6"></div>
-                <p class="text-secondary max-w-2xl mx-auto">对作品有任何疑问或合作意向，欢迎随时联系</p>
+                <p class="text-secondary max-w-2xl mx-auto translate-item" data-key="contact_desc">对作品有任何疑问或合作意向，欢迎随时联系</p>
             </div>
             
             <div class="flex flex-col md:flex-row justify-center gap-12">
@@ -309,10 +338,18 @@
                     <p class="mb-4"><i class="fa fa-envelope-o text-accent mr-3"></i>jasonshen0225@163.com</p>
                     <p class="mb-4"><i class="fa fa-phone text-accent mr-3"></i>+86 18837100766</p>
                     <div class="flex justify-center md:justify-start space-x-6 mt-8">
-                        <a href="https://github.com/JASON-SHEN-0225" class="text-secondary hover:text-accent transition-colors"><i class="fa fa-github text-xl"></i></a>
-                        <a href="#" class="text-secondary hover:text-accent transition-colors"><i class="fa fa-twitter text-xl"></i></a>
-                        <a href="#" class="text-secondary hover:text-accent transition-colors"><i class="fa fa-flickr text-xl"></i></a>
-                        <a href="#" class="text-secondary hover:text-accent transition-colors"><i class="fa fa-behance text-xl"></i></a>
+                        <a href="https://github.com/JASON-SHEN-0225" class="text-secondary hover:text-accent transition-colors" aria-label="GitHub">
+                            <i class="fa fa-github text-xl"></i>
+                        </a>
+                        <a href="#" class="text-secondary hover:text-accent transition-colors" aria-label="Twitter">
+                            <i class="fa fa-twitter text-xl"></i>
+                        </a>
+                        <a href="#" class="text-secondary hover:text-accent transition-colors" aria-label="Flickr">
+                            <i class="fa fa-flickr text-xl"></i>
+                        </a>
+                        <a href="#" class="text-secondary hover:text-accent transition-colors" aria-label="Behance">
+                            <i class="fa fa-behance text-xl"></i>
+                        </a>
                     </div>
                 </div>
             </div>
@@ -322,20 +359,20 @@
 
     <!-- 灯箱模态框 -->
     <div id="lightbox" class="fixed inset-0 bg-black/95 z-50 hidden items-center justify-center p-4">
-        <button id="close-lightbox" class="absolute top-8 right-8 text-white text-2xl hover:text-accent transition-colors z-10">
+        <button id="close-lightbox" class="absolute top-8 right-8 text-white text-2xl hover:text-accent transition-colors z-10" aria-label="关闭">
             <i class="fa fa-times"></i>
         </button>
-        <button id="prev-lightbox" class="absolute left-8 top-1/2 transform -translate-y-1/2 text-white text-4xl hover:text-accent transition-colors z-10">
+        <button id="prev-lightbox" class="absolute left-8 top-1/2 transform -translate-y-1/2 text-white text-4xl hover:text-accent transition-colors z-10" aria-label="上一个">
             <i class="fa fa-chevron-left"></i>
         </button>
-        <button id="next-lightbox" class="absolute right-8 top-1/2 transform -translate-y-1/2 text-white text-4xl hover:text-accent transition-colors z-10">
+        <button id="next-lightbox" class="absolute right-8 top-1/2 transform -translate-y-1/2 text-white text-4xl hover:text-accent transition-colors z-10" aria-label="下一个">
             <i class="fa fa-chevron-right"></i>
         </button>
         <div id="lightbox-content" class="max-w-6xl w-full max-h-[90vh]">
             <!-- 内容将动态加载 -->
         </div>
         <div id="lightbox-caption" class="absolute bottom-12 left-0 right-0 text-center text-white text-lg max-w-3xl mx-auto px-4">
-            <!-- 标题将动态加载 -->
+            <!-- 标题将动态加载（不翻译） -->
         </div>
     </div>
 
@@ -346,11 +383,11 @@
             <div class="flex flex-col md:flex-row justify-between items-center">
                 <div class="mb-6 md:mb-0">
                     <h2 class="text-xl font-display font-light tracking-wide">
-                        <span class="text-white">光影</span><span class="text-accent">.</span>
+                        <span class="text-white translate-item" data-key="brand_name">光影</span><span class="text-accent">.</span>
                     </h2>
-                    <p class="text-gray-400 text-sm mt-2">© 2025 摄影作品集. By JasonS 申家铖.</p>
+                    <p class="text-gray-400 text-sm mt-2 translate-item" data-key="copyright">© 2025 摄影作品集. By JasonS 申家铖.</p>
                 </div>
-                <div class="text-gray-400 text-sm">
+                <div class="text-gray-400 text-sm translate-item" data-key="footer_slogan">
                     用镜头讲述生活的故事
                 </div>
             </div>
@@ -368,6 +405,65 @@
         const IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
         const VIDEO_EXTENSIONS = ['mp4', 'webm', 'mov'];
         
+        // 中英文翻译对象
+        const translations = {
+            zh: {
+                page_title: '光影集 | 申家铖摄影作品',
+                brand_name: '光影',
+                nav_photos: '照片',
+                nav_videos: '视频',
+                nav_about: '关于',
+                nav_contact: '联系',
+                nav_check: '状态检查',
+                lang_switch: 'ENG',
+                hero_title: '捕捉光影<br>定格瞬间',
+                hero_desc: '用镜头讲述故事，每一段影像都是时间的诗篇',
+                hero_btn: '浏览作品集',
+                photos_title: '摄影作品',
+                photos_desc: '精选摄影作品，记录生活中的美好瞬间',
+                videos_title: '视频作品',
+                videos_desc1: '延时摄影与动态影像，捕捉时间的流动',
+                videos_desc2: '视频封面可能与视频内容无关',
+                about_title: '关于摄影师 申家铖 JasonS',
+                about_desc: '相信每一张照片都有自己的灵魂与故事。透过镜头，观察世界的细微之处，捕捉那些稍纵即逝的光影瞬间。',
+                about_btn: '联系我',
+                contact_title: '联系我',
+                contact_desc: '对作品有任何疑问或合作意向，欢迎随时联系',
+                load_error: '无法加载作品，请稍后再试',
+                copyright: '© 2025 摄影作品集. By JasonS 申家铖.',
+                footer_slogan: '用镜头讲述生活的故事'
+            },
+            en: {
+                page_title: 'Light & Shadow | Jason Shen Photography',
+                brand_name: 'Light & Shadow',
+                nav_photos: 'Photos',
+                nav_videos: 'Videos',
+                nav_about: 'About',
+                nav_contact: 'Contact',
+                nav_check: 'Status Check',
+                lang_switch: '中',
+                hero_title: 'Capture Light & Shadow<br>Freeze the Moment',
+                hero_desc: 'Tell stories through the lens, every image is a poem of time',
+                hero_btn: 'Browse Portfolio',
+                photos_title: 'Photography Works',
+                photos_desc: 'Selected photography works, recording beautiful moments in life',
+                videos_title: 'Video Works',
+                videos_desc1: 'Time-lapse photography and dynamic images, capturing the flow of time',
+                videos_desc2: 'Video covers may not be related to video content',
+                about_title: 'About Photographer Jason Shen',
+                about_desc: 'Believe that every photo has its own soul and story. Through the lens, observe the subtle details of the world and capture those fleeting moments of light and shadow.',
+                about_btn: 'Contact Me',
+                contact_title: 'Contact Me',
+                contact_desc: 'If you have any questions about the works or cooperation intentions, please feel free to contact me',
+                load_error: 'Failed to load works, please try again later',
+                copyright: '© 2025 Photography Portfolio. By JasonS Shen.',
+                footer_slogan: 'Tell the story of life through the lens'
+            }
+        };
+        
+        // 当前语言（默认中文）
+        let currentLang = 'zh';
+        
         // DOM元素
         const photosContainer = document.getElementById('photos-container');
         const videosContainer = document.getElementById('videos-container');
@@ -384,6 +480,10 @@
         const menuToggle = document.getElementById('menu-toggle');
         const mobileMenu = document.getElementById('mobile-menu');
         const sections = document.querySelectorAll('.section-fade-in');
+        const langSwitchDesktop = document.getElementById('lang-switch-desktop');
+        const langSwitchMobile = document.getElementById('lang-switch-mobile');
+        const langTextDesktop = document.getElementById('lang-text-desktop');
+        const langTextMobile = document.getElementById('lang-text-mobile');
         
         // 存储加载的媒体数据
         let allMedia = {
@@ -395,6 +495,9 @@
         
         // 初始化页面
         document.addEventListener('DOMContentLoaded', () => {
+            // 初始化语言显示
+            updateLanguage();
+            
             // 加载媒体
             loadMedia('photos');
             loadMedia('videos');
@@ -411,6 +514,10 @@
                     mobileMenu.classList.add('hidden');
                 });
             });
+            
+            // 语言切换事件
+            langSwitchDesktop.addEventListener('click', toggleLanguage);
+            langSwitchMobile.addEventListener('click', toggleLanguage);
             
             // 灯箱关闭事件
             closeLightbox.addEventListener('click', closeLightboxHandler);
@@ -467,6 +574,41 @@
                 });
             });
         });
+        
+        /**
+         * 切换语言
+         */
+        function toggleLanguage() {
+            currentLang = currentLang === 'zh' ? 'en' : 'zh';
+            updateLanguage();
+        }
+        
+        /**
+         * 更新页面语言
+         */
+        function updateLanguage() {
+            // 更新所有需要翻译的元素
+            document.querySelectorAll('.translate-item').forEach(item => {
+                const key = item.getAttribute('data-key');
+                if (translations[currentLang][key]) {
+                    // 处理包含HTML的文本（如换行）
+                    if (item.tagName === 'H2' || item.tagName === 'P' || item.tagName === 'A') {
+                        item.innerHTML = translations[currentLang][key];
+                    } else {
+                        item.textContent = translations[currentLang][key];
+                    }
+                }
+            });
+            
+            // 更新页面语言属性
+            document.documentElement.lang = currentLang;
+            
+            // 更新语言切换按钮图标（可选增强）
+            const langIcons = document.querySelectorAll('.lang-switch i');
+            langIcons.forEach(icon => {
+                icon.className = currentLang === 'zh' ? 'fa fa-globe text-accent' : 'fa fa-globe text-accent';
+            });
+        }
         
         /**
          * 设置滚动动画监听
@@ -673,9 +815,17 @@
                     container.innerHTML = `
                         <div class="col-span-full text-center py-24 text-secondary">
                             <i class="fa fa-${type === 'photos' ? 'image' : 'video-camera'} text-5xl mb-6 opacity-30"></i>
-                            <p>暂无${type === 'photos' ? '摄影' : '视频'}作品</p>
+                            <p class="translate-item" data-key="${type === 'photos' ? 'no_photos' : 'no_videos'}">暂无${type === 'photos' ? '摄影' : '视频'}作品</p>
                         </div>
                     `;
+                    // 补充无作品时的翻译（之前漏掉的key）
+                    if (!translations.zh.no_photos) {
+                        translations.zh.no_photos = '暂无摄影作品';
+                        translations.en.no_photos = 'No photography works yet';
+                        translations.zh.no_videos = '暂无视频作品';
+                        translations.en.no_videos = 'No video works yet';
+                    }
+                    updateLanguage(); // 刷新无作品提示的语言
                     loadingEl.classList.add('hidden');
                     return;
                 }
@@ -716,7 +866,7 @@
                                        class="w-full h-auto transition-transform duration-700 ease-out"
                                        preload="none">
                                     <source src="${fileUrl}" type="${getVideoMimeType(ext)}">
-                                    您的浏览器不支持视频播放
+                                    <span class="translate-item" data-key="video_not_supported">您的浏览器不支持视频播放</span>
                                 </video>
                                 <div class="media-overlay flex items-end">
                                     <div>
@@ -729,6 +879,12 @@
                             </div>
                         `;
 
+                        // 补充视频不支持的翻译
+                        if (!translations.zh.video_not_supported) {
+                            translations.zh.video_not_supported = '您的浏览器不支持视频播放';
+                            translations.en.video_not_supported = 'Your browser does not support video playback';
+                        }
+
                         // 视频加载特殊处理：12秒超时提示 + 封面获取
                         const loadingElItem = mediaItem.querySelector(`#loading-${index}`);
                         const videoEl = mediaItem.querySelector('video');
@@ -736,9 +892,16 @@
                         // 视频项加载超时提示（12秒）
                         const itemLoadTimeout = setTimeout(() => {
                             if (loadingElItem.style.opacity !== '0') {
-                                loadingElItem.innerHTML = '<i class="fa fa-exclamation-triangle text-accent mr-2"></i> 加载中，点击可查看';
+                                loadingElItem.innerHTML = `<i class="fa fa-exclamation-triangle text-accent mr-2"></i> <span class="translate-item" data-key="loading_tip">加载中，点击可查看</span>`;
+                                updateLanguage(); // 刷新超时提示语言
                             }
                         }, 12000);
+
+                        // 补充加载提示的翻译
+                        if (!translations.zh.loading_tip) {
+                            translations.zh.loading_tip = '加载中，点击可查看';
+                            translations.en.loading_tip = 'Loading, click to view';
+                        }
 
                         // 获取并设置视频封面
                         try {
@@ -771,6 +934,7 @@
                 const errorEl = type === 'photos' ? photosError : videosError;
                 loadingEl.classList.add('hidden');
                 errorEl.classList.remove('hidden');
+                updateLanguage(); // 刷新错误提示语言
             }
         }
         
@@ -832,7 +996,7 @@
                     <div class="flex items-center justify-center">
                         <video controls class="max-w-full max-h-[90vh] object-contain mx-auto" preload="auto">
                             <source src="${fileUrl}" type="${getVideoMimeType(ext)}">
-                            您的浏览器不支持视频播放
+                            <span class="translate-item" data-key="video_not_supported">您的浏览器不支持视频播放</span>
                         </video>
                     </div>
                 `;
@@ -843,7 +1007,7 @@
                 }, 100);
             }
             
-            lightboxCaption.textContent = baseName;
+            lightboxCaption.textContent = baseName; // 不翻译媒体名称
             
             // 显示灯箱
             lightbox.classList.remove('hidden');
