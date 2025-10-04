@@ -304,7 +304,8 @@
                     <div id="hero-title" class="typewriter-text text-3xl md:text-5xl lg:text-6xl font-display font-light leading-tight"></div>
                     <div id="hero-desc" class="typewriter-text text-lg md:text-xl opacity-90 max-w-2xl font-light"></div>
                 </div>
-                <a href="#photos" class="btn-primary inline-block border border-white text-white px-8 py-3 text-sm uppercase tracking-wider relative translate-item" data-key="hero_btn">
+                <!-- 增加按钮上边距，与文本留出一行空间 -->
+                <a href="#photos" class="btn-primary inline-block border border-white text-white px-8 py-3 text-sm uppercase tracking-wider relative mt-6 translate-item" data-key="hero_btn">
                     浏览作品集
                 </a>
             </div>
@@ -475,7 +476,7 @@
         const IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
         const VIDEO_EXTENSIONS = ['mp4', 'webm', 'mov'];
         
-        // 中英文翻译对象 - 修正了英文单词间的空格
+        // 中英文翻译对象 - 已修正英文单词空格问题
         const translations = {
             zh: {
                 page_title: '光影集 | 申家铖摄影作品',
@@ -516,8 +517,9 @@
                 nav_contact: 'Contact',
                 nav_check: 'Status Check',
                 lang_switch: '中',
-                hero_title: 'Capture  Light  &  Shadow \n Freeze  the  Moment',
-                hero_desc: 'Tell  stories  through  the  lens ,  every image  is  a  poem  of  time',
+                // 已修正英文标题和描述的单词空格
+                hero_title: 'Capture Light & Shadow\nFreeze the Moment',
+                hero_desc: 'Tell stories through the lens, every image is a poem of time',
                 hero_btn: 'Browse Portfolio',
                 photos_title: 'Photography Works',
                 photos_desc: 'Selected photography works, recording beautiful moments in life',
