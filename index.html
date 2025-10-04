@@ -298,11 +298,11 @@
         </div>
         
         <div class="container mx-auto px-6 h-full flex items-center relative z-20">
-            <div class="max-w-2xl text-white">
+            <div class="max-w-3xl text-white">
                 <!-- 打字机效果容器 -->
                 <div class="typewriter-container">
                     <div id="hero-title" class="typewriter-text text-3xl md:text-5xl lg:text-6xl font-display font-light leading-tight"></div>
-                    <div id="hero-desc" class="typewriter-text text-lg md:text-xl opacity-90 max-w-lg font-light"></div>
+                    <div id="hero-desc" class="typewriter-text text-lg md:text-xl opacity-90 max-w-2xl font-light"></div>
                 </div>
                 <a href="#photos" class="btn-primary inline-block border border-white text-white px-8 py-3 text-sm uppercase tracking-wider relative translate-item" data-key="hero_btn">
                     浏览作品集
@@ -475,7 +475,7 @@
         const IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
         const VIDEO_EXTENSIONS = ['mp4', 'webm', 'mov'];
         
-        // 中英文翻译对象
+        // 中英文翻译对象 - 修正了英文单词间的空格
         const translations = {
             zh: {
                 page_title: '光影集 | 申家铖摄影作品',
@@ -662,9 +662,10 @@
          * @param {string} text - 要显示的文本
          * @param {number} delay - 开始延迟时间(ms)
          * @param {number} speed - 打字速度(ms)
+         * @param {boolean} keepCursor - 完成后是否保留光标
          * @returns {Promise} - 打字完成的Promise
          */
-        function typeWriter(element, text, delay = 0, speed = 50) {
+        function typeWriter(element, text, delay = 0, speed = 50, keepCursor = false) {
             return new Promise((resolve) => {
                 // 清空元素
                 element.innerHTML = '';
@@ -706,7 +707,11 @@
                             charIndex++;
                             typewriterInterval = setTimeout(typeNextChar, speed);
                         } else {
-                            // 所有字符打完，保持光标闪烁
+                            // 所有字符打完
+                            if (!keepCursor) {
+                                // 移除光标
+                                cursor.remove();
+                            }
                             resolve();
                         }
                     }
@@ -724,13 +729,16 @@
             if (typewriterInterval) {
                 clearTimeout(typewriterInterval);
             }
+            // 清空打字机容器，解决文本残留问题
+            heroTitleEl.innerHTML = '';
+            heroDescEl.innerHTML = '';
         }
         
         /**
          * 切换语言（添加过渡动画）
          */
         function toggleLanguage() {
-            // 停止当前打字机效果
+            // 停止当前打字机效果并清空内容
             stopTypeWriter();
             
             // 给所有翻译元素添加过渡类（淡出）
@@ -788,10 +796,10 @@
             const titleText = translations[currentLang].hero_title;
             const descText = translations[currentLang].hero_desc;
             
-            // 先打标题，再打描述
-            typeWriter(heroTitleEl, titleText, 300, currentLang === 'zh' ? 80 : 50)
+            // 先打标题（不保留光标），再打描述（保留光标）
+            typeWriter(heroTitleEl, titleText, 300, currentLang === 'zh' ? 80 : 50, false)
                 .then(() => {
-                    typeWriter(heroDescEl, descText, 500, currentLang === 'zh' ? 60 : 40);
+                    typeWriter(heroDescEl, descText, 500, currentLang === 'zh' ? 60 : 40, true);
                 });
         }
         
