@@ -195,7 +195,7 @@
                 letter-spacing: 0.3px;
                 line-height: 1.8;
             }
-            /* 打字机效果样式 */
+            /* 打字机效果样式 - 重点修改部分 */
             .typewriter-container {
                 min-height: 160px; /* 固定高度，确保按钮位置不变 */
                 display: flex;
@@ -203,16 +203,21 @@
                 gap: 1rem;
             }
             .typewriter-text {
-                white-space: pre-line;
+                white-space: pre-wrap; /* 保留空格和换行 */
                 overflow: hidden;
                 position: relative;
                 display: inline-block;
+                line-height: 1.2;
             }
+            /* 光标样式修改为加粗下划线，类似ChatGPT */
             .typewriter-cursor {
-                border-right: 2px solid white;
+                display: inline-block;
+                width: 1ch; /* 宽度为一个字符 */
+                height: 1.2em; /* 高度与文本匹配 */
+                border-bottom: 3px solid white; /* 加粗下划线 */
                 animation: cursor-blink 1s step-end infinite;
-                margin-left: 2px;
-                line-height: 1;
+                margin-left: 1px;
+                vertical-align: bottom; /* 对齐到文本底部 */
             }
             @keyframes cursor-blink {
                 from, to { border-color: transparent }
@@ -223,6 +228,7 @@
                 transform: translateY(5px);
                 transition: opacity 0.2s ease, transform 0.2s ease;
                 display: inline-block;
+                white-space: pre; /* 确保空格正确显示 */
             }
             .typewriter-char.typed {
                 opacity: 1;
@@ -305,7 +311,7 @@
                     <div id="hero-desc" class="typewriter-text text-lg md:text-xl opacity-90 max-w-2xl font-light"></div>
                 </div>
                 <!-- 增加按钮上边距，与文本留出一行空间 -->
-                <a href="#photos" class="btn-primary inline-block border border-white text-white px-8 py-3 text-sm uppercase tracking-wider relative mt-6 translate-item" data-key="hero_btn">
+                <a href="#photos" class="btn-primary inline-block border border-white text-white px-8 py-3 text-sm uppercase tracking-wider relative mt-8 translate-item" data-key="hero_btn">
                     浏览作品集
                 </a>
             </div>
@@ -476,7 +482,7 @@
         const IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
         const VIDEO_EXTENSIONS = ['mp4', 'webm', 'mov'];
         
-        // 中英文翻译对象 - 已修正英文单词空格问题
+        // 中英文翻译对象 - 确保英文有正确空格
         const translations = {
             zh: {
                 page_title: '光影集 | 申家铖摄影作品',
@@ -517,7 +523,7 @@
                 nav_contact: 'Contact',
                 nav_check: 'Status Check',
                 lang_switch: '中',
-                // 已修正英文标题和描述的单词空格
+                // 确保英文标题和描述有正确的空格
                 hero_title: 'Capture Light & Shadow\nFreeze the Moment',
                 hero_desc: 'Tell stories through the lens, every image is a poem of time',
                 hero_btn: 'Browse Portfolio',
@@ -659,7 +665,7 @@
         });
         
         /**
-         * 打字机效果实现
+         * 打字机效果实现 - 修复空格显示问题
          * @param {HTMLElement} element - 要应用打字机效果的元素
          * @param {string} text - 要显示的文本
          * @param {number} delay - 开始延迟时间(ms)
@@ -676,12 +682,11 @@
                 const oldCursor = element.querySelector('.typewriter-cursor');
                 if (oldCursor) oldCursor.remove();
                 
-                // 创建光标元素
+                // 创建光标元素（下划线样式）
                 const cursor = document.createElement('span');
                 cursor.className = 'typewriter-cursor';
-                cursor.textContent = ' '; // 空格确保光标有高度
                 
-                // 分割文本为字符数组
+                // 分割文本为字符数组 - 保留空格和换行
                 const chars = text.split('');
                 let charIndex = 0;
                 
@@ -693,10 +698,12 @@
                     // 打字函数
                     function typeNextChar() {
                         if (charIndex < chars.length) {
-                            // 创建字符元素
+                            // 创建字符元素 - 特别处理空格
                             const charSpan = document.createElement('span');
                             charSpan.className = 'typewriter-char';
-                            charSpan.textContent = chars[charIndex];
+                            
+                            // 对于空格，使用非换行空格确保显示
+                            charSpan.textContent = chars[charIndex] === ' ' ? '\u00A0' : chars[charIndex];
                             
                             // 在光标前插入字符
                             element.insertBefore(charSpan, cursor);
@@ -707,7 +714,9 @@
                             }, 10);
                             
                             charIndex++;
-                            typewriterInterval = setTimeout(typeNextChar, speed);
+                            // 空格打字速度稍快
+                            const charSpeed = chars[charIndex] === ' ' ? speed * 0.5 : speed;
+                            typewriterInterval = setTimeout(typeNextChar, charSpeed);
                         } else {
                             // 所有字符打完
                             if (!keepCursor) {
