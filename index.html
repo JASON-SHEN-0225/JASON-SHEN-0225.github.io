@@ -40,14 +40,15 @@
             .content-auto {
                 content-visibility: auto;
             }
-            /* 网格容器优化：居中显示并限制最大宽度 */
+            /* 网格容器：居中、响应式列数、自适应宽度 */
             .gallery-grid {
                 display: grid;
                 grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
                 gap: 2rem;
-                max-width: 1400px; /* 最大宽度限制，避免大屏幕过宽 */
-                margin: 0 auto; /* 水平居中 */
-                width: 100%; /* 占满可用宽度 */
+                max-width: 1400px;
+                margin: 0 auto;
+                width: 100%;
+                padding: 0 1rem; /* 小屏幕添加内边距 */
             }
             /* 响应式列数调整 */
             @screen sm {
@@ -57,16 +58,11 @@
             }
             @screen md {
                 .gallery-grid {
-                    grid-template-columns: repeat(2, 1fr);
-                    padding: 0 1rem;
+                    grid-template-columns: repeat(3, 1fr);
+                    padding: 0; /* 中等屏幕移除内边距 */
                 }
             }
             @screen lg {
-                .gallery-grid {
-                    grid-template-columns: repeat(3, 1fr);
-                }
-            }
-            @screen xl {
                 .gallery-grid {
                     grid-template-columns: repeat(3, 1fr);
                 }
@@ -78,7 +74,7 @@
                 opacity: 0;
                 transform: translateY(30px);
                 justify-self: center; /* 网格项自身居中 */
-                max-width: 100%; /* 确保不超出容器 */
+                max-width: 100%;
             }
             .media-item.visible {
                 opacity: 1;
@@ -89,16 +85,21 @@
                 overflow: hidden;
                 position: relative;
                 background-color: #f8f8f8;
-                width: 100%; /* 容器宽度适应父元素 */
-                max-width: 100%; /* 最大宽度限制 */
+                width: 100%;
+                max-width: 100%;
+                display: flex;
+                justify-content: center; /* 容器内媒体元素居中 */
+                align-items: center;
             }
-            /* 媒体元素自适应设备宽度 */
+            /* 媒体元素自适应宽度 + 居中 */
             .media-container img,
             .media-container video {
-                width: 100%; /* 宽度适应容器 */
-                height: auto; /* 高度自动，保持比例 */
-                display: block; /* 移除底部间隙 */
+                width: 100%;
+                height: auto;
+                display: block;
                 transition: transform 0.7s ease-out;
+                max-height: 400px; /* 可选：限制媒体最大高度，避免过高 */
+                object-fit: contain; /* 确保媒体内容完整显示 */
             }
             .page-transition-enter {
                 opacity: 0;
@@ -258,7 +259,13 @@
             .temp-video {
                 display: none !important;
             }
-            /* 语言切换按钮 */
+            /* 语言切换按钮：确保移动端只显示一个 */
+            .lang-switch-desktop {
+                @apply hidden sm:hidden md:flex md:block; /* 桌面端（md及以上）显示，移动端隐藏 */
+            }
+            .lang-switch-mobile {
+                @apply md:hidden; /* 移动端（md以下）显示，桌面端隐藏 */
+            }
             .lang-switch {
                 position: relative;
                 overflow: hidden;
@@ -387,15 +394,15 @@
                     </ul>
                 </nav>
 
-                <!-- 语言切换按钮 - 桌面端 -->
-                <button id="lang-switch-desktop" class="lang-switch hidden md:flex">
+                <!-- 语言切换按钮 - 桌面端（md及以上显示，移动端隐藏） -->
+                <button id="lang-switch-desktop" class="lang-switch lang-switch-desktop">
                     <i class="fa fa-globe"></i>
                     <span id="lang-text-desktop" class="translate-item" data-key="lang_switch">ENG</span>
                 </button>
 
-                <!-- 移动端菜单按钮 + 语言切换 -->
+                <!-- 移动端菜单按钮 + 语言切换（md以下显示） -->
                 <div class="flex items-center md:hidden gap-3">
-                    <button id="lang-switch-mobile" class="lang-switch">
+                    <button id="lang-switch-mobile" class="lang-switch lang-switch-mobile">
                         <i class="fa fa-globe"></i>
                         <span id="lang-text-mobile" class="translate-item" data-key="lang_switch">ENG</span>
                     </button>
@@ -470,7 +477,7 @@
 
     <!-- 照片展示区 -->
     <section id="photos" class="py-24 bg-white section-fade-in">
-        <div class="container mx-auto px-4"> <!-- 容器使用px-4确保小屏幕有边距 -->
+        <div class="container mx-auto px-4">
             <div class="text-center mb-16">
                 <h2 class="text-3xl md:text-4xl font-display font-light mb-4 translate-item" data-key="photos_title">
                     摄影作品</h2>
@@ -502,7 +509,7 @@
 
     <!-- 视频展示区 -->
     <section id="videos" class="py-24 bg-light section-fade-in">
-        <div class="container mx-auto px-4"> <!-- 容器使用px-4确保小屏幕有边距 -->
+        <div class="container mx-auto px-4">
             <div class="text-center mb-16">
                 <h2 class="text-3xl md:text-4xl font-display font-light mb-4 translate-item" data-key="videos_title">
                     视频作品</h2>
@@ -805,7 +812,7 @@
                 });
             });
 
-            // 语言切换事件
+            // 语言切换事件（统一绑定，确保两个按钮功能一致）
             langSwitchDesktop.addEventListener('click', toggleLanguage);
             langSwitchMobile.addEventListener('click', toggleLanguage);
 
@@ -1411,7 +1418,7 @@
                     let mediaElement;
 
                     if (type === 'photos') {
-                        // 照片 - 自适应宽度
+                        // 照片 - 自适应宽度 + 居中
                         mediaElement = document.createElement('img');
                         mediaElement.src = fileUrl;
                         mediaElement.alt = fileName;
@@ -1426,7 +1433,7 @@
                             loading.innerHTML = `<i class="fa fa-exclamation-triangle text-secondary"></i>`;
                         };
                     } else {
-                        // 视频 - 自适应宽度
+                        // 视频 - 自适应宽度 + 居中
                         mediaElement = document.createElement('video');
                         mediaElement.src = fileUrl;
                         mediaElement.poster = `https://picsum.photos/800/600?video-loading-${Date.now()}`;
