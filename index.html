@@ -60,30 +60,40 @@
                 opacity: 1;
                 transform: translateY(0);
             }
-            .media-item:hover .media-overlay {
-                opacity: 1;
-            }
-            .media-item:hover img,
-            .media-item:hover video {
-                transform: scale(1.02);
-            }
+            /* 翻页动画相关样式 */
             .media-container {
                 overflow: hidden;
                 position: relative;
-                min-height: 200px;
                 background-color: #f8f8f8;
             }
-            /* 竖屏照片适配样式 */
-            .media-container img.portrait {
-                object-fit: contain; /* 完整显示竖屏照片 */
-                max-height: 600px; /* 限制最大高度 */
-                margin: 0 auto; /* 水平居中 */
-                width: auto; /* 自动适应宽度 */
+            .page-transition-enter {
+                opacity: 0;
+                transform: translateY(20px);
             }
-            .media-container img.landscape {
-                object-fit: cover; /* 横屏照片填充容器 */
+            .page-transition-enter-active {
+                opacity: 1;
+                transform: translateY(0);
+                transition: opacity 0.5s ease, transform 0.5s ease;
+            }
+            .page-transition-exit {
+                opacity: 1;
+            }
+            .page-transition-exit-active {
+                opacity: 0;
+                transform: translateY(-20px);
+                transition: opacity 0.3s ease, transform 0.3s ease;
+            }
+            /* 移除照片比例限制，允许自然呈现 */
+            .media-container img {
                 width: 100%;
-                height: 100%;
+                height: auto;
+                transition: transform 0.7s ease-out;
+                display: block;
+            }
+            .media-container video {
+                width: 100%;
+                height: auto;
+                transition: transform 0.7s ease-out;
             }
             .media-loading {
                 position: absolute;
@@ -1265,7 +1275,48 @@
         }
 
         /**
-         * 从GitHub加载媒体文件（带分页）
+         * 为翻页添加动画效果
+         */
+        function animatePageTransition(container, newContent) {
+            return new Promise((resolve) => {
+                // 获取当前所有媒体项
+                const currentItems = container.querySelectorAll('.media-item');
+                
+                // 添加退出动画
+                currentItems.forEach((item, index) => {
+                    item.classList.add('page-transition-exit');
+                    // 错开动画时间，创造层次感
+                    item.style.transitionDelay = `${index * 50}ms`;
+                });
+                
+                // 等待退出动画完成
+                setTimeout(() => {
+                    // 清空容器并添加新内容
+                    container.innerHTML = '';
+                    container.appendChild(newContent);
+                    
+                    // 获取新的媒体项并添加进入动画
+                    const newItems = container.querySelectorAll('.media-item');
+                    newItems.forEach((item, index) => {
+                        item.classList.add('page-transition-enter');
+                        // 强制重绘
+                        item.offsetHeight;
+                        item.classList.add('page-transition-enter-active');
+                        item.style.transitionDelay = `${index * 50}ms`;
+                        
+                        // 动画完成后移除临时类
+                        setTimeout(() => {
+                            item.classList.remove('page-transition-enter', 'page-transition-enter-active');
+                        }, 500);
+                    });
+                    
+                    resolve();
+                }, 300); // 与退出动画时间匹配
+            });
+        }
+
+        /**
+         * 从GitHub加载媒体文件（带分页和翻页动画）
          */
         async function loadMedia(type) {
             const container = type === 'photos' ? photosContainer : videosContainer;
@@ -1274,7 +1325,7 @@
             const extensions = type === 'photos' ? IMAGE_EXTENSIONS : VIDEO_EXTENSIONS;
 
             try {
-                container.innerHTML = '';
+                // 显示加载指示器
                 loadingIndicator.classList.remove('hidden');
                 errorElement.classList.add('hidden');
 
@@ -1311,6 +1362,10 @@
                 const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
                 const currentPageFiles = mediaFiles.slice(startIndex, endIndex);
 
+                // 创建新内容容器
+                const newContent = document.createElement('div');
+                newContent.className = 'gallery-grid';
+
                 // 创建当前页媒体元素
                 for (let i = 0; i < currentPageFiles.length; i++) {
                     const file = currentPageFiles[i];
@@ -1334,19 +1389,13 @@
                     let mediaElement;
 
                     if (type === 'photos') {
-                        // 照片（带竖屏适配）
+                        // 照片 - 移除比例限制，自然显示
                         mediaElement = document.createElement('img');
                         mediaElement.src = fileUrl;
                         mediaElement.alt = fileName;
                         mediaElement.className = 'transition-transform duration-700 ease-out';
 
                         mediaElement.onload = () => {
-                            // 判断横竖屏并添加对应类
-                            if (mediaElement.naturalHeight > mediaElement.naturalWidth) {
-                                mediaElement.classList.add('portrait');
-                            } else {
-                                mediaElement.classList.add('landscape');
-                            }
                             loading.style.opacity = '0';
                             setTimeout(() => loading.style.display = 'none', 300);
                         };
@@ -1359,7 +1408,7 @@
                         mediaElement = document.createElement('video');
                         mediaElement.src = fileUrl;
                         mediaElement.poster = `https://picsum.photos/800/600?video-loading-${Date.now()}`;
-                        mediaElement.className = 'w-full h-full object-cover transition-transform duration-700 ease-out';
+                        mediaElement.className = 'w-full h-auto object-cover transition-transform duration-700 ease-out';
                         mediaElement.preload = 'none';
 
                         getVideoFirstFrame(fileUrl, fileExt).then(url => {
@@ -1380,11 +1429,20 @@
                     mediaContainer.appendChild(mediaElement);
                     mediaContainer.appendChild(overlay);
                     mediaItem.appendChild(mediaContainer);
-                    container.appendChild(mediaItem);
+                    newContent.appendChild(mediaItem);
 
                     mediaItem.addEventListener('click', () => {
                         openLightbox(type, originalIndex);
                     });
+                }
+
+                // 应用翻页动画
+                if (container.children.length > 0) {
+                    await animatePageTransition(container, newContent);
+                } else {
+                    // 初始加载没有动画
+                    container.innerHTML = '';
+                    container.appendChild(newContent);
                 }
 
                 loadingIndicator.classList.add('hidden');
