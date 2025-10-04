@@ -138,6 +138,45 @@
                 width: 100%;
             }
             /* 隐藏用于截取帧的临时视频 */
+            /* 新增：模态框过渡动画 */
+#lightbox, #wechat-modal {
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+#lightbox.visible, #wechat-modal.visible {
+    opacity: 1;
+    visibility: visible;
+}
+/* 微信二维码内容动画 */
+#wechat-modal .bg-white {
+    transform: scale(0.9);
+    opacity: 0;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+}
+#wechat-modal.visible .bg-white {
+    transform: scale(1);
+    opacity: 1;
+}
+/* 灯箱内容动画 */
+#lightbox-content {
+    transform: scale(0.95);
+    opacity: 0;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+}
+#lightbox.visible #lightbox-content {
+    transform: scale(1);
+    opacity: 1;
+}
+#lightbox-caption {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.3s ease 0.1s, transform 0.3s ease 0.1s;
+}
+#lightbox.visible #lightbox-caption {
+    opacity: 1;
+    transform: translateY(0);
+}
             .temp-video {
                 display: none !important;
             }
@@ -477,7 +516,7 @@
     </section>
 
     <!-- 微信二维码模态框 -->
-    <div id="wechat-modal" class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4">
+    <div id="wechat-modal" class="fixed inset-0 bg-black/80 z-50 items-center justify-center p-4">
         <div class="bg-white p-6 rounded-sm max-w-xs">
             <button id="close-wechat" class="text-primary hover:text-accent transition-colors mb-4 float-right">
                 <i class="fa fa-times"></i>
@@ -488,7 +527,7 @@
     </div>
 
     <!-- 灯箱模态框 -->
-    <div id="lightbox" class="fixed inset-0 bg-black/95 z-50 hidden items-center justify-center p-4">
+    <div id="lightbox" class="fixed inset-0 bg-black/95 z-50 items-center justify-center p-4">
         <button id="close-lightbox"
             class="absolute top-8 right-8 text-white text-2xl hover:text-accent transition-colors z-10" aria-label="关闭">
             <i class="fa fa-times"></i>
@@ -674,8 +713,14 @@
             // 语言切换事件
             langSwitchDesktop.addEventListener('click', toggleLanguage);
             langSwitchMobile.addEventListener('click', toggleLanguage);
+            // 显示灯箱的函数（在原有代码中找到类似逻辑，添加如下代码）
 
             // 灯箱关闭事件
+            // 灯箱关闭事件
+            function closeLightboxHandler() {
+                lightbox.classList.remove('visible'); // 隐藏灯箱（带动画）
+                document.body.style.overflow = '';
+            }
             closeLightbox.addEventListener('click', closeLightboxHandler);
 
             // 灯箱导航
@@ -689,18 +734,19 @@
                 }
             });
             // 微信二维码模态框控制
+            // 微信二维码模态框控制
             const wechatModal = document.getElementById('wechat-modal');
             const wechatLink = document.getElementById('wechat-link');
             const closeWechat = document.getElementById('close-wechat');
 
             wechatLink.addEventListener('click', (e) => {
                 e.preventDefault();
-                wechatModal.style.display = 'flex';
+                wechatModal.classList.add('visible'); // 显示模态框（带动画）
                 document.body.style.overflow = 'hidden';
             });
 
             function closeWechatModal() {
-                wechatModal.style.display = 'none';
+                wechatModal.classList.remove('visible'); // 隐藏模态框（带动画）
                 document.body.style.overflow = '';
             }
 
@@ -1258,8 +1304,9 @@
             }
 
             // 显示灯箱
+            // 显示灯箱（添加visible类触发动画）
+            lightbox.classList.add('visible', 'flex');
             lightbox.classList.remove('hidden');
-            lightbox.classList.add('flex');
             document.body.style.overflow = 'hidden'; // 防止背景滚动
         }
 
@@ -1267,7 +1314,7 @@
          * 关闭灯箱
          */
         function closeLightboxHandler() {
-            lightbox.classList.add('hidden');
+            lightbox.classList.remove('visible'); // 移除visible类触发关闭动画
             lightbox.classList.remove('flex');
             document.body.style.overflow = ''; // 恢复滚动
 
