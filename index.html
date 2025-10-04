@@ -40,21 +40,45 @@
             .content-auto {
                 content-visibility: auto;
             }
+            /* 网格容器优化：居中显示并限制最大宽度 */
             .gallery-grid {
                 display: grid;
-                grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+                grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
                 gap: 2rem;
+                max-width: 1400px; /* 最大宽度限制，避免大屏幕过宽 */
+                margin: 0 auto; /* 水平居中 */
+                width: 100%; /* 占满可用宽度 */
+            }
+            /* 响应式列数调整 */
+            @screen sm {
+                .gallery-grid {
+                    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+                }
             }
             @screen md {
                 .gallery-grid {
-                    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+                    grid-template-columns: repeat(2, 1fr);
+                    padding: 0 1rem;
                 }
             }
+            @screen lg {
+                .gallery-grid {
+                    grid-template-columns: repeat(3, 1fr);
+                }
+            }
+            @screen xl {
+                .gallery-grid {
+                    grid-template-columns: repeat(3, 1fr);
+                }
+            }
+
             .media-item {
                 transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
                 cursor: pointer;
                 opacity: 0;
                 transform: translateY(30px);
+                justify-self: center; /* 网格项自身居中 */
+                max-width: 100%; /* 确保不超出容器 */
             }
             .media-item.visible {
                 opacity: 1;
@@ -65,6 +89,16 @@
                 overflow: hidden;
                 position: relative;
                 background-color: #f8f8f8;
+                width: 100%; /* 容器宽度适应父元素 */
+                max-width: 100%; /* 最大宽度限制 */
+            }
+            /* 媒体元素自适应设备宽度 */
+            .media-container img,
+            .media-container video {
+                width: 100%; /* 宽度适应容器 */
+                height: auto; /* 高度自动，保持比例 */
+                display: block; /* 移除底部间隙 */
+                transition: transform 0.7s ease-out;
             }
             .page-transition-enter {
                 opacity: 0;
@@ -82,18 +116,6 @@
                 opacity: 0;
                 transform: translateY(-20px);
                 transition: opacity 0.3s ease, transform 0.3s ease;
-            }
-            /* 移除照片比例限制，允许自然呈现 */
-            .media-container img {
-                width: 100%;
-                height: auto;
-                transition: transform 0.7s ease-out;
-                display: block;
-            }
-            .media-container video {
-                width: 100%;
-                height: auto;
-                transition: transform 0.7s ease-out;
             }
             .media-loading {
                 position: absolute;
@@ -448,7 +470,7 @@
 
     <!-- 照片展示区 -->
     <section id="photos" class="py-24 bg-white section-fade-in">
-        <div class="container mx-auto px-6">
+        <div class="container mx-auto px-4"> <!-- 容器使用px-4确保小屏幕有边距 -->
             <div class="text-center mb-16">
                 <h2 class="text-3xl md:text-4xl font-display font-light mb-4 translate-item" data-key="photos_title">
                     摄影作品</h2>
@@ -480,7 +502,7 @@
 
     <!-- 视频展示区 -->
     <section id="videos" class="py-24 bg-light section-fade-in">
-        <div class="container mx-auto px-6">
+        <div class="container mx-auto px-4"> <!-- 容器使用px-4确保小屏幕有边距 -->
             <div class="text-center mb-16">
                 <h2 class="text-3xl md:text-4xl font-display font-light mb-4 translate-item" data-key="videos_title">
                     视频作品</h2>
@@ -1389,7 +1411,7 @@
                     let mediaElement;
 
                     if (type === 'photos') {
-                        // 照片 - 移除比例限制，自然显示
+                        // 照片 - 自适应宽度
                         mediaElement = document.createElement('img');
                         mediaElement.src = fileUrl;
                         mediaElement.alt = fileName;
@@ -1404,7 +1426,7 @@
                             loading.innerHTML = `<i class="fa fa-exclamation-triangle text-secondary"></i>`;
                         };
                     } else {
-                        // 视频
+                        // 视频 - 自适应宽度
                         mediaElement = document.createElement('video');
                         mediaElement.src = fileUrl;
                         mediaElement.poster = `https://picsum.photos/800/600?video-loading-${Date.now()}`;
